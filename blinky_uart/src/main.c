@@ -67,9 +67,9 @@ int main(int argc, char* argv[])
 	  UartHandle.Init.Mode       = UART_MODE_TX_RX;
 	  HAL_UART_Init(&UartHandle);
 
-	uint8_t str[5] = "Test";
+	uint8_t str[6] = "Hallo";
 
-	HAL_UART_Transmit(&UartHandle, str, 4, 0xFFFF);
+	HAL_UART_Transmit(&UartHandle, str, 5, 0xFFFF);
 
 
   blink_led_init();
@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
       HAL_Delay(500);
       blink_led_off();
       HAL_Delay(500);
-      HAL_UART_Transmit(&UartHandle, str, 4, 0xFFFF);
+      HAL_UART_Transmit(&UartHandle, str, 5, 0xFFFF);
     }
   // Infinite loop, never return.
 }
