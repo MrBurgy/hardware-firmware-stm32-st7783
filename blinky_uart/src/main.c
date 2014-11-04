@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include "main.h"
 #include "BlinkLed.h"
-
 #include "stm32f4xx_hal_conf.h"
 #include "stm32f4xx_hal.h"
 
@@ -40,8 +39,29 @@ void SysTick_Handler(void)
   HAL_IncTick();
 }
 
+void initButton1(void)
+{
+	// Enable GPIO Peripheral clock
+	  //RCC->AHB1ENR |= GPIO_PIN_13;
+
+	__GPIOC_CLK_ENABLE();
+
+	  GPIO_InitTypeDef GPIO_InitStructure;
+
+	  // Configure pin in output push/pull mode
+	  GPIO_InitStructure.Pin = GPIO_PIN_13;
+	  GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+	  GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
+	  GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+	  HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+
+}
+
 int main(int argc, char* argv[])
 {
+
+	initButton1();
 
 	UartHandle.State = HAL_UART_STATE_RESET;
 	UartHandle.Instance        = USARTx;
@@ -61,8 +81,10 @@ int main(int argc, char* argv[])
 
   blink_led_init();
 
+  GPIO_PinState state = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
+
   // Infinite loop
-  while (1)
+  while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET)
     {
       blink_led_on();
       HAL_Delay(500);
