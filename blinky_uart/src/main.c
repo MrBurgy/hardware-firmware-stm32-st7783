@@ -67,35 +67,35 @@ int main(int argc, char* argv[])
 	UartHandle.State = HAL_UART_STATE_RESET;
 	UartHandle.Instance        = USARTx;
 
-	  UartHandle.Init.BaudRate   = 9600;
-	  UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
-	  UartHandle.Init.StopBits   = UART_STOPBITS_1;
-	  UartHandle.Init.Parity     = UART_PARITY_ODD;
-	  UartHandle.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
-	  UartHandle.Init.Mode       = UART_MODE_TX_RX;
-	  HAL_UART_Init(&UartHandle);
+	UartHandle.Init.BaudRate   = 9600;
+	UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
+	UartHandle.Init.StopBits   = UART_STOPBITS_1;
+	UartHandle.Init.Parity     = UART_PARITY_ODD;
+	UartHandle.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+	UartHandle.Init.Mode       = UART_MODE_TX_RX;
+	HAL_UART_Init(&UartHandle);
 
 	uint8_t str[30] = "Hallo\n\r";
 
 	HAL_UART_Transmit(&UartHandle, str, 7, 0xFFFF);
 
-  blink_led_init();
+	blink_led_init();
 
-  uint8_t n = 0;
+	uint8_t n = 0;
 
-  // Infinite loop
-  while (1)
-    {
-      //blink_led_on();
-      GPIOA->ODR = 1 << n;
-      n = (n + 1) % 8;
-      //blink_led_off();
-      HAL_Delay(500);
-      char strc[30] = { 0 };
-      sprintf(strc, "%d;", n);
-      HAL_UART_Transmit(&UartHandle, strc, strlen(strc), 0xFFFF);
-    }
-  // Infinite loop, never return.
+	// Infinite loop
+	while (1)
+	{
+		//blink_led_on();
+		GPIOA->ODR = 1 << n;
+		n = (n + 1) % 8;
+		//blink_led_off();
+		HAL_Delay(500);
+		char strc[30] = { 0 };
+		sprintf(strc, "%d;", n);
+		HAL_UART_Transmit(&UartHandle, strc, strlen(strc), 0xFFFF);
+	}
+// Infinite loop, never return.
 }
 
 void HAL_UART_MspInit(UART_HandleTypeDef *huart)
