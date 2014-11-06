@@ -10,6 +10,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "main.h"
 #include "BlinkLed.h"
 #include "stm32f4xx_hal_conf.h"
@@ -49,7 +50,7 @@ void initButton1(void)
 	  GPIO_InitTypeDef GPIO_InitStructure;
 
 	  // Configure pin in output push/pull mode
-	  GPIO_InitStructure.Pin = GPIO_PIN_13;
+	  GPIO_InitStructure.Pin = GPIO_PIN_All;
 	  GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
 	  GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
 	  GPIO_InitStructure.Pull = GPIO_PULLDOWN;
@@ -74,23 +75,25 @@ int main(int argc, char* argv[])
 	  UartHandle.Init.Mode       = UART_MODE_TX_RX;
 	  HAL_UART_Init(&UartHandle);
 
-	uint8_t str[6] = "Hallo";
+	uint8_t str[30] = "Hallo\n\r";
 
-	HAL_UART_Transmit(&UartHandle, str, 5, 0xFFFF);
-
+	HAL_UART_Transmit(&UartHandle, str, 7, 0xFFFF);
 
   blink_led_init();
 
-  GPIO_PinState state = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
+  uint8_t n = 0;
 
   // Infinite loop
-  while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET)
+  while (1)
     {
-      blink_led_on();
+      //blink_led_on();
+      GPIOA->ODR = 1 << n;
+      n = (n + 1) % 8;
+      //blink_led_off();
       HAL_Delay(500);
-      blink_led_off();
-      HAL_Delay(500);
-      HAL_UART_Transmit(&UartHandle, str, 5, 0xFFFF);
+      char strc[30] = { 0 };
+      sprintf(strc, "%d;", n);
+      HAL_UART_Transmit(&UartHandle, strc, strlen(strc), 0xFFFF);
     }
   // Infinite loop, never return.
 }
