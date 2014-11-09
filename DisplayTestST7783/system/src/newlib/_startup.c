@@ -34,7 +34,7 @@
 // ----------------------------------------------------------------------------
 
 #if !defined(OS_INCLUDE_STARTUP_GUARD_CHECKS)
-#define OS_INCLUDE_STARTUP_GUARD_CHECKS (1)
+#define OS_INCLUDE_STARTUP_GUARD_CHECKS (0)
 #endif
 
 // ----------------------------------------------------------------------------

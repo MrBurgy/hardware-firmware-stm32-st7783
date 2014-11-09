@@ -8,6 +8,7 @@
 #include <stdio.h>
 //#include "diag/Trace.h"
 #include "ST7783.h"
+#include "stm32f4xx_hal.h"
 
 // ----------------------------------------------------------------------------
 //
@@ -29,10 +30,37 @@
 #pragma GCC diagnostic ignored "-Wmissing-declarations"
 #pragma GCC diagnostic ignored "-Wreturn-type"
 
+/**
+  * @brief  This function handles SysTick Handler.
+  * @param  None
+  * @retval None
+  */
+void SysTick_Handler(void)
+{
+  HAL_IncTick();
+}
+
 int
 main(int argc, char* argv[])
 {
-	// TODO: SysClock, GPIO init
+	__GPIOA_CLK_ENABLE();
+	__GPIOB_CLK_ENABLE();
+	__GPIOC_CLK_ENABLE();
+
+
+	GPIO_InitTypeDef GPIO_InitStructure;
+
+	// Configure pin in output push/pull mode
+	GPIO_InitStructure.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
+	GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
+	GPIO_InitStructure.Pull = GPIO_PULLUP;
+
+
+
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+	HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
 
 	LCD_Begin();
 	LCD_FillScreen(BLACK);
@@ -41,7 +69,10 @@ main(int argc, char* argv[])
 	// Infinite loop
 	while (1)
 	{
-	   // Add your code here.
+	   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+	   HAL_Delay(1000);
+	   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+	   HAL_Delay(1000);
 	}
 }
 

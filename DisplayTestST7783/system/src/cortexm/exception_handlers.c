@@ -120,8 +120,9 @@ PendSV_Handler(void)
 void __attribute__ ((section(".after_vectors"),weak))
 SysTick_Handler(void)
 {
-  while (1)
-    {
-    }
+//  while (1)
+//    {
+//    }
+	HAL_IncTick();
 }
 
