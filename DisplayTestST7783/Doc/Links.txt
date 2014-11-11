@@ -1,1 +1,4 @@
-http://www.st.com/web/en/catalog/tools/PF260215
+http://www.st.com/web/en/catalog/tools/PF260215   Libs für Nucleo
+http://www.mikrocontroller.net/topic/344889#new   Display
+https://code.google.com/p/lpc1343codebase/source/browse/trunk/drivers/lcd/tft/hw/ILI9325.c?r=137  Display
+http://mikrocontroller.bplaced.net/wordpress/
