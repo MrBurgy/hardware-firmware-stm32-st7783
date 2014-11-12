@@ -24,5 +24,7 @@ void LCD_SetAddrWindow(int x1, int y1, int x2, int y2);
 void LCD_Flood(uint16_t color, uint32_t len);
 void LCD_FillScreen(uint16_t color);
 void LCD_DrawFastHLine(int16_t x, int16_t y, int16_t length, uint16_t color);
+void LCD_DrawPixel(int16_t x, int16_t y, uint16_t color);
+void LCD_DrawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
 
 #endif /* __ST7783_H */

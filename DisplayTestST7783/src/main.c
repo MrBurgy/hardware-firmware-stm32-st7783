@@ -53,8 +53,8 @@ main(int argc, char* argv[])
 	// Configure pin in output push/pull mode
 	GPIO_InitStructure.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
 	GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
-	GPIO_InitStructure.Pull = GPIO_PULLUP;
+	GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+	GPIO_InitStructure.Pull = GPIO_NOPULL;
 
 
 
@@ -65,6 +65,7 @@ main(int argc, char* argv[])
 	LCD_Begin();
 	LCD_FillScreen(BLACK);
 	LCD_DrawFastHLine(0, 160, 240, WHITE);
+	LCD_DrawCircle(120, 160, 100, WHITE);
 
 	// Infinite loop
 	while (1)

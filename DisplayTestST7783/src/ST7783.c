@@ -142,16 +142,6 @@ void LCD_Begin(void)
 {
 	uint8_t i = 0;
 
-
-
-//	while(1)
-//	{
-//		LCD_Write8(0);
-//	HAL_Delay(1000);
-//		LCD_Write8(8);
-//	HAL_Delay(1000);
-//	}
-
 	LCD_Reset();
 
 
@@ -184,13 +174,6 @@ void LCD_Reset(void)
 	delay(100);
 	RST_IDLE;
 
-
-//	if(_reset) {
-//	digitalWrite(_reset, LOW);
-//	delay(2);
-//	digitalWrite(_reset, HIGH);
-//	}
-
 	// Data transfer sync
 	CS_ACTIVE;
 
@@ -203,15 +186,6 @@ void LCD_Reset(void)
 void LCD_Write8(uint8_t data)
 {
 
-//	GPIOA->ODR = (GPIOA->ODR & !GPIO_PIN_9)  | (data & 0x01);		// LCD_D0 -> PA9
-//	GPIOA->ODR = (GPIOC->ODR & !GPIO_PIN_7)  | (data & 0x02);		// LCD_D1 -> PC7
-//	GPIOA->ODR = (GPIOA->ODR & !GPIO_PIN_10) | (data & 0x04);		// LCD_D2 -> PA10
-//	GPIOA->ODR = (GPIOB->ODR & !GPIO_PIN_3)  | (data & 0x08);		// LCD_D3 -> PB3
-//	GPIOA->ODR = (GPIOB->ODR & !GPIO_PIN_5)  | (data & 0x10);		// LCD_D4 -> PB5
-//	GPIOA->ODR = (GPIOB->ODR & !GPIO_PIN_4)  | (data & 0x20);		// LCD_D5 -> PB4
-//	GPIOA->ODR = (GPIOB->ODR & !GPIO_PIN_10) | (data & 0x40);		// LCD_D6 -> PB10
-//	GPIOA->ODR = (GPIOA->ODR & !GPIO_PIN_8)  | (data & 0x80);		// LCD_D7 -> PA8
-//
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, (data & 0x01) !=0);
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, (data & 0x02) !=0);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10,(data & 0x04) !=0);
@@ -221,15 +195,7 @@ void LCD_Write8(uint8_t data)
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10,(data & 0x40) !=0);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, (data & 0x80) !=0);
 
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, (data & 0x01) ==0);
-//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, (data & 0x02) ==0);
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10,(data & 0x04) ==0);
-//	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, (data & 0x08) ==0);
-//	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, (data & 0x10) ==0);
-//	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, (data & 0x20) ==0);
-//	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10,(data & 0x40) ==0);
-//	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, (data & 0x80) ==0);
-
+	WR_STROBE;
 }
 
 void LCD_WriteRegister8(uint8_t a, uint8_t d)
@@ -432,4 +398,38 @@ void LCD_DrawFastHLine(int16_t x, int16_t y, int16_t length, uint16_t color)
   LCD_Flood(color, length);
   LCD_SetAddrWindow(0, 0, TFTWIDTH/*_width*/ - 1, TFTHEIGHT/*_height*/ - 1);
 
+}
+
+void LCD_DrawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
+{
+  int16_t f = 1 - r;
+  int16_t ddF_x = 1;
+  int16_t ddF_y = -2 * r;
+  int16_t x = 0;
+  int16_t y = r;
+
+  LCD_DrawPixel(x0  , y0+r, color);
+  LCD_DrawPixel(x0  , y0-r, color);
+  LCD_DrawPixel(x0+r, y0  , color);
+  LCD_DrawPixel(x0-r, y0  , color);
+
+  while (x<y) {
+    if (f >= 0) {
+      y--;
+      ddF_y += 2;
+      f += ddF_y;
+    }
+    x++;
+    ddF_x += 2;
+    f += ddF_x;
+
+    LCD_DrawPixel(x0 + x, y0 + y, color);
+    LCD_DrawPixel(x0 - x, y0 + y, color);
+    LCD_DrawPixel(x0 + x, y0 - y, color);
+    LCD_DrawPixel(x0 - x, y0 - y, color);
+    LCD_DrawPixel(x0 + y, y0 + x, color);
+    LCD_DrawPixel(x0 - y, y0 + x, color);
+    LCD_DrawPixel(x0 + y, y0 - x, color);
+    LCD_DrawPixel(x0 - y, y0 - x, color);
+  }
 }
