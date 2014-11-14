@@ -1,8 +1,6 @@
 /*
  * STM7783.c
- *
- *  Created on: 07.11.2014
- *      Author: pdickmann
+ * 
  */
 
 #include "ST7783.h"
@@ -14,26 +12,48 @@
 // // Initialization command table for LCD controller
  #define TFTLCD_DELAY 0xFF
 
-#define LCD_CS  GPIO_PIN_0	// PB0 -> A3 // Chip Select goes to Analog 3
-#define LCD_CD  GPIO_PIN_4	// PA4 -> A2 // Command/Data goes to Analog 2
-#define LCD_WR  GPIO_PIN_1	// PA1 -> A1 // LCD Write goes to Analog 1
-#define LCD_RD  GPIO_PIN_0	// PA0 -> A0 // LCD Read goes to Analog 0
-#define LCD_RST GPIO_PIN_1	// PC1 -> RESET
+#define LCD_CS_PIN  GPIO_PIN_0	// PB0 -> A3 // Chip Select goes to Analog 3
+#define LCD_CD_PIN  GPIO_PIN_4	// PA4 -> A2 // Command/Data goes to Analog 2
+#define LCD_WR_PIN  GPIO_PIN_1	// PA1 -> A1 // LCD Write goes to Analog 1
+#define LCD_RD_PIN  GPIO_PIN_0	// PA0 -> A0 // LCD Read goes to Analog 0
+#define LCD_RST_PIN GPIO_PIN_1	// PC1 -> RESET
+
+#define LCD_CS_GPIO_PORT  GPIOB  
+#define LCD_CS_HIGH()     LCD_CS_GPIO_PORT->BSRR = LCD_CS_PIN
+#define LCD_CS_LOW()      LCD_CS_GPIO_PORT->BRR = LCD_CS_PIN
+
+#define LCD_RD_GPIO_PORT  GPIOA
+#define LCD_RD_HIGH()     LCD_RD_GPIO_PORT->BSRR = LCD_RD_PIN
+#define LCD_RD_LOW()      LCD_RD_GPIO_PORT->BRR = LCD_RD_PIN
+
+#define LCD_WR_GPIO_PORT  GPIOA
+#define LCD_WR_HIGH()     LCD_WR_GPIO_PORT->BSRR = LCD_WR_PIN
+#define LCD_WR_LOW()      LCD_WR_GPIO_PORT->BRR = LCD_WR_PIN
+
+#define LCD_CD_GPIO_PORT  GPIOA
+#define LCD_CD_HIGH()     LCD_CD_GPIO_PORT->BSRR = LCD_CD_PIN
+#define LCD_CD_LOW()      LCD_CD_GPIO_PORT->BRR = LCD_CD_PIN
+
+#define LCD_RST_GPIO_PORT GPIOC
+#define LCD_RST_HIGH()    LCD_RST_GPIO_PORT->BSRR = LCD_RST_PIN
+#define LCD_RST_LOW()     LCD_RST_GPIO_PORT->BRR = LCD_RST_PIN
+
+#define LCD_WR_STROBE() { LCD_WR_LOW(); LCD_WR_HIGH(); }
 
 
-#define RD_ACTIVE  HAL_GPIO_WritePin(GPIOA, LCD_RD, GPIO_PIN_RESET)
-#define RD_IDLE    HAL_GPIO_WritePin(GPIOA, LCD_RD, GPIO_PIN_SET)
-#define WR_ACTIVE  HAL_GPIO_WritePin(GPIOA, LCD_WR, GPIO_PIN_RESET)
-#define WR_IDLE    HAL_GPIO_WritePin(GPIOA, LCD_WR, GPIO_PIN_SET)
-#define CD_COMMAND HAL_GPIO_WritePin(GPIOA, LCD_CD, GPIO_PIN_RESET)
-#define CD_DATA    HAL_GPIO_WritePin(GPIOA, LCD_CD, GPIO_PIN_SET)
-#define CS_ACTIVE  HAL_GPIO_WritePin(GPIOB, LCD_CS, GPIO_PIN_RESET)
-#define CS_IDLE    HAL_GPIO_WritePin(GPIOB, LCD_CS, GPIO_PIN_SET)
-#define RST_ACTIVE HAL_GPIO_WritePin(GPIOC, LCD_RST, GPIO_PIN_RESET)
-#define RST_IDLE   HAL_GPIO_WritePin(GPIOC, LCD_RST, GPIO_PIN_SET)
+//~ #define RD_ACTIVE  HAL_GPIO_WritePin(GPIOA, LCD_RD_PIN, GPIO_PIN_RESET)
+//~ #define RD_IDLE    HAL_GPIO_WritePin(GPIOA, LCD_RD_PIN, GPIO_PIN_SET)
+//~ #define WR_ACTIVE  HAL_GPIO_WritePin(GPIOA, LCD_WR_PIN, GPIO_PIN_RESET)
+//~ #define WR_IDLE    HAL_GPIO_WritePin(GPIOA, LCD_WR_PIN, GPIO_PIN_SET)
+//~ #define CD_COMMAND HAL_GPIO_WritePin(GPIOA, LCD_CD_PIN, GPIO_PIN_RESET)
+//~ #define CD_DATA    HAL_GPIO_WritePin(GPIOA, LCD_CD_PIN, GPIO_PIN_SET)
+//~ #define CS_ACTIVE  HAL_GPIO_WritePin(GPIOB, LCD_CS_PIN, GPIO_PIN_RESET)
+//~ #define CS_IDLE    HAL_GPIO_WritePin(GPIOB, LCD_CS_PIN, GPIO_PIN_SET)
+//~ #define RST_ACTIVE HAL_GPIO_WritePin(GPIOC, LCD_RST_PIN, GPIO_PIN_RESET)
+//~ #define RST_IDLE   HAL_GPIO_WritePin(GPIOC, LCD_RST_PIN, GPIO_PIN_SET)
 
 
-#define WR_STROBE { WR_ACTIVE; WR_IDLE; }
+
 
 static const uint16_t ST7781_regValues[] = {
 	0x0001,0x0100,
@@ -141,13 +161,12 @@ void delay(unsigned int t)
 void LCD_Begin(void)
 {
 	uint8_t i = 0;
-
-	LCD_Reset();
-
-
-	uint16_t a, d;
-	//    driver = ID_932X;
-	CS_ACTIVE;
+  uint16_t a, d;
+  
+	LCD_Reset();	
+	
+	LCD_CS_LOW();
+  
 	while(i < sizeof(ST7781_regValues) / sizeof(uint16_t)) {
 		a = ST7781_regValues[i++];
 		d = ST7781_regValues[i++];
@@ -157,35 +176,43 @@ void LCD_Begin(void)
 			LCD_WriteRegister16(a, d);
 		}
 	}
-	//setRotation(m_rotation);
+	
+  //setRotation(m_rotation);
 	LCD_SetAddrWindow(0, 0, TFTWIDTH-1, TFTHEIGHT-1);
 }
 
 void LCD_Reset(void)
 {
+	LCD_CS_HIGH();
+	LCD_WR_HIGH();
+	LCD_RD_HIGH();
 
-
-	CS_IDLE;
-	WR_IDLE;
-	RD_IDLE;
-
-
-	RST_ACTIVE;
+	LCD_RST_LOW();
 	delay(100);
-	RST_IDLE;
+	LCD_RST_HIGH();
 
 	// Data transfer sync
-	CS_ACTIVE;
+	LCD_CS_LOW();
 
-	CD_COMMAND;
+	LCD_CD_LOW();
 	LCD_Write8(0x00);
-	for(uint8_t i=0; i<3; i++) WR_STROBE; // Three extra 0x00s
-	CS_IDLE;
+	for(uint8_t i=0; i<3; i++) LCD_WR_STROBE(); // Three extra 0x00s
+	LCD_CS_HIGH();
 }
 
 void LCD_Write8(uint8_t data)
 {
 
+  uint32_t a = (data & 0x01) << 8 | (data & 0x04) << 7 | (data & 0x80);
+  
+  uint32_t b = (data & 0x04) >> 1 | (data & 0x10) | (data & 0x20) >> 2 | (data & 0x40) << 3;
+  
+  uint32_t c = (data & 0x02) << 6;
+           
+  GPIOA->ODR = (GPIOA->ODR & 0xFC7F) | ((data & 0x01) << 8) | ((data & 0x04) << 7) | (data & 0x80);
+  GPIOB->ODR = (GPIOB->ODR & 0xFFE3) | ((data & 0x08) >> 1) | (data & 0x10) | ((data & 0x20) >> 2) | ((data & 0x40) << 4);
+  GPIOC->ODR = (GPIOC->ODR & 0xFFBF) | ((data & 0x02) << 5);
+  
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, (data & 0x01) !=0);
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, (data & 0x02) !=0);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10,(data & 0x04) !=0);
@@ -195,19 +222,30 @@ void LCD_Write8(uint8_t data)
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10,(data & 0x40) !=0);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, (data & 0x80) !=0);
 
-	WR_STROBE;
+	LCD_WR_STROBE();
 }
 
 void LCD_WriteRegister8(uint8_t a, uint8_t d)
 {
-	CD_COMMAND; LCD_Write8(a); CD_DATA; LCD_Write8(d);
+	LCD_CD_LOW();
+  LCD_Write8(a);
+  LCD_CD_HIGH();
+  LCD_Write8(d);
 }
 
 void LCD_WriteRegister16(uint16_t a, uint16_t d)
 {
   uint8_t hi, lo;
-  hi = (a) >> 8; lo = (a); CD_COMMAND; LCD_Write8(hi); LCD_Write8(lo);
-  hi = (d) >> 8; lo = (d); CD_DATA   ; LCD_Write8(hi); LCD_Write8(lo);
+  hi = (a) >> 8;
+  lo = (a);
+  LCD_CD_LOW();
+  LCD_Write8(hi);
+  LCD_Write8(lo);
+  hi = (d) >> 8;
+  lo = (d);
+  LCD_CD_HIGH();
+  LCD_Write8(hi);
+  LCD_Write8(lo);
 }
 
 // Sets the LCD address window (and address counter, on 932X).
@@ -216,7 +254,7 @@ void LCD_WriteRegister16(uint16_t a, uint16_t d)
 void LCD_SetAddrWindow(int x1, int y1, int x2, int y2)
 {
 
-	CS_ACTIVE;
+	LCD_CS_LOW();
 
 	// Values passed are in current (possibly rotated) coordinate
 	// system.  932X requires hardware-native coords regardless of
@@ -269,7 +307,7 @@ void LCD_SetAddrWindow(int x1, int y1, int x2, int y2)
 	LCD_WriteRegister16(0x0021, y );
 
 
-	CS_IDLE;
+	LCD_CS_HIGH();
 }
 
 // Fast block fill operation for fillScreen, fillRect, H/V line, etc.
@@ -281,13 +319,13 @@ void LCD_Flood(uint16_t color, uint32_t len)
   uint8_t  i, hi = color >> 8,
               lo = color;
 
-	CS_ACTIVE;
-	CD_COMMAND;
+	LCD_CS_LOW();
+	LCD_CD_LOW();
 	LCD_Write8(0x00); // High byte of GRAM register...
 	LCD_Write8(0x22); // Write data to GRAM
 
 	// Write first pixel normally, decrement counter by 1
-	CD_DATA;
+	LCD_CD_HIGH();
 	LCD_Write8(hi);
 	LCD_Write8(lo);
 	len--;
@@ -299,14 +337,14 @@ void LCD_Flood(uint16_t color, uint32_t len)
 		while(blocks--) {
 			i = 16; // 64 pixels/block / 4 pixels/pass
 			do {
-				WR_STROBE; WR_STROBE; WR_STROBE; WR_STROBE; // 2 bytes/pixel
-				WR_STROBE; WR_STROBE; WR_STROBE; WR_STROBE; // x 4 pixels
+				LCD_WR_STROBE(); LCD_WR_STROBE(); LCD_WR_STROBE(); LCD_WR_STROBE(); // 2 bytes/pixel
+				LCD_WR_STROBE(); LCD_WR_STROBE(); LCD_WR_STROBE(); LCD_WR_STROBE(); // x 4 pixels
 			} while(--i);
 		}
 				// Fill any remaining pixels (1 to 64)
 		for(i = (uint8_t)len & 63; i--; ) {
-			WR_STROBE;
-			WR_STROBE;
+			LCD_WR_STROBE();
+			LCD_WR_STROBE();
 		}
 	} else {
 		while(blocks--) {
@@ -321,7 +359,7 @@ void LCD_Flood(uint16_t color, uint32_t len)
 			LCD_Write8(lo);
 		}
 	}
-	CS_IDLE;
+	LCD_CS_HIGH();
 }
 
 void LCD_FillScreen(uint16_t color)
@@ -338,7 +376,7 @@ void LCD_FillScreen(uint16_t color)
 		case 2 : x = TFTWIDTH  - 1; y = TFTHEIGHT - 1; break;
 		case 3 : x = 0            ; y = TFTHEIGHT - 1; break;
 	}
-	CS_ACTIVE;
+	LCD_CS_LOW();
 	LCD_WriteRegister16(0x0020, x);
 	LCD_WriteRegister16(0x0021, y);
 
@@ -350,7 +388,7 @@ void LCD_DrawPixel(int16_t x, int16_t y, uint16_t color) {
   // Clip
   if((x < 0) || (y < 0) || (x >= TFTWIDTH/*_width*/) || (y >= TFTHEIGHT/*_height*/)) return;
 
-  CS_ACTIVE;
+  LCD_CS_LOW();
 
     int16_t t;
     switch(m_rotation) {
@@ -373,7 +411,7 @@ void LCD_DrawPixel(int16_t x, int16_t y, uint16_t color) {
     LCD_WriteRegister16(0x0021, y);
     LCD_WriteRegister16(0x0022, color );
 
-  CS_IDLE;
+  LCD_CS_HIGH();
 }
 
 void LCD_DrawFastHLine(int16_t x, int16_t y, int16_t length, uint16_t color)
