@@ -191,10 +191,6 @@ void LCD_Reset(void)
 	LCD_CS_HIGH();
 }
 
-uint16_t a = 0;
-	uint16_t b = 0;
-	uint16_t c = 0;
-
 void LCD_Write8(uint8_t data)
 {
 	// ------ PORT -----     --- Data ----
