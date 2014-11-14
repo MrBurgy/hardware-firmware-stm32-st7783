@@ -18,41 +18,27 @@
 #define LCD_RD_PIN  GPIO_PIN_0	// PA0 -> A0 // LCD Read goes to Analog 0
 #define LCD_RST_PIN GPIO_PIN_1	// PC1 -> RESET
 
-#define LCD_CS_GPIO_PORT  GPIOB  
-#define LCD_CS_HIGH()     LCD_CS_GPIO_PORT->BSRR = LCD_CS_PIN
-#define LCD_CS_LOW()      LCD_CS_GPIO_PORT->BRR = LCD_CS_PIN
+#define LCD_CS_GPIO_PORT  GPIOB
+#define LCD_CS_HIGH()     LCD_CS_GPIO_PORT->BSRRL = LCD_CS_PIN
+#define LCD_CS_LOW()      LCD_CS_GPIO_PORT->BSRRH = LCD_CS_PIN
 
 #define LCD_RD_GPIO_PORT  GPIOA
-#define LCD_RD_HIGH()     LCD_RD_GPIO_PORT->BSRR = LCD_RD_PIN
-#define LCD_RD_LOW()      LCD_RD_GPIO_PORT->BRR = LCD_RD_PIN
+#define LCD_RD_HIGH()     LCD_RD_GPIO_PORT->BSRRL = LCD_RD_PIN
+#define LCD_RD_LOW()      LCD_RD_GPIO_PORT->BSRRH = LCD_RD_PIN
 
 #define LCD_WR_GPIO_PORT  GPIOA
-#define LCD_WR_HIGH()     LCD_WR_GPIO_PORT->BSRR = LCD_WR_PIN
-#define LCD_WR_LOW()      LCD_WR_GPIO_PORT->BRR = LCD_WR_PIN
+#define LCD_WR_HIGH()    LCD_WR_GPIO_PORT->BSRRL = LCD_WR_PIN
+#define LCD_WR_LOW()     LCD_WR_GPIO_PORT->BSRRH = LCD_WR_PIN
 
 #define LCD_CD_GPIO_PORT  GPIOA
-#define LCD_CD_HIGH()     LCD_CD_GPIO_PORT->BSRR = LCD_CD_PIN
-#define LCD_CD_LOW()      LCD_CD_GPIO_PORT->BRR = LCD_CD_PIN
+#define LCD_CD_HIGH()     LCD_CD_GPIO_PORT->BSRRL = LCD_CD_PIN
+#define LCD_CD_LOW()      LCD_CD_GPIO_PORT->BSRRH = LCD_CD_PIN
 
 #define LCD_RST_GPIO_PORT GPIOC
-#define LCD_RST_HIGH()    LCD_RST_GPIO_PORT->BSRR = LCD_RST_PIN
-#define LCD_RST_LOW()     LCD_RST_GPIO_PORT->BRR = LCD_RST_PIN
+#define LCD_RST_HIGH()    LCD_RST_GPIO_PORT->BSRRL = LCD_RST_PIN
+#define LCD_RST_LOW()     LCD_RST_GPIO_PORT->BSRRH = LCD_RST_PIN
 
-#define LCD_WR_STROBE() { LCD_WR_LOW(); LCD_WR_HIGH(); }
-
-
-//~ #define RD_ACTIVE  HAL_GPIO_WritePin(GPIOA, LCD_RD_PIN, GPIO_PIN_RESET)
-//~ #define RD_IDLE    HAL_GPIO_WritePin(GPIOA, LCD_RD_PIN, GPIO_PIN_SET)
-//~ #define WR_ACTIVE  HAL_GPIO_WritePin(GPIOA, LCD_WR_PIN, GPIO_PIN_RESET)
-//~ #define WR_IDLE    HAL_GPIO_WritePin(GPIOA, LCD_WR_PIN, GPIO_PIN_SET)
-//~ #define CD_COMMAND HAL_GPIO_WritePin(GPIOA, LCD_CD_PIN, GPIO_PIN_RESET)
-//~ #define CD_DATA    HAL_GPIO_WritePin(GPIOA, LCD_CD_PIN, GPIO_PIN_SET)
-//~ #define CS_ACTIVE  HAL_GPIO_WritePin(GPIOB, LCD_CS_PIN, GPIO_PIN_RESET)
-//~ #define CS_IDLE    HAL_GPIO_WritePin(GPIOB, LCD_CS_PIN, GPIO_PIN_SET)
-//~ #define RST_ACTIVE HAL_GPIO_WritePin(GPIOC, LCD_RST_PIN, GPIO_PIN_RESET)
-//~ #define RST_IDLE   HAL_GPIO_WritePin(GPIOC, LCD_RST_PIN, GPIO_PIN_SET)
-
-
+#define LCD_WR_STROBE() { LCD_WR_LOW(); delay(1); LCD_WR_HIGH(); delay(1); }
 
 
 static const uint16_t ST7781_regValues[] = {
@@ -149,12 +135,17 @@ static uint8_t m_rotation = 0;
 
 void delay(unsigned int t)
 {
-  unsigned char t1;
-  while(t--)
-  for ( t1=10; t1 > 0; t1-- )
-  {
-    __asm("nop");
-  }
+//  unsigned char t1;
+//  while(t--)
+//  for ( t1=10; t1 > 0; t1-- )
+//  {
+//    __asm("nop");
+//  }
+
+	for (; t > 0; t-- )
+	{
+	__asm("nop");
+	}
 }
 
 
@@ -200,27 +191,27 @@ void LCD_Reset(void)
 	LCD_CS_HIGH();
 }
 
+uint16_t a = 0;
+	uint16_t b = 0;
+	uint16_t c = 0;
+
 void LCD_Write8(uint8_t data)
 {
+	// ------ PORT -----     --- Data ----
+	// GPIOA, GPIO_PIN_9  -> BIT 0 -> 0x01
+	// GPIOC, GPIO_PIN_7  -> BIT 1 -> 0x02
+	// GPIOA, GPIO_PIN_10 -> BIT 2 -> 0x04
+	// GPIOB, GPIO_PIN_3  -> BIT 3 -> 0x08
+	// GPIOB, GPIO_PIN_5  -> BIT 4 -> 0x10
+	// GPIOB, GPIO_PIN_4  -> BIT 5 -> 0x20
+	// GPIOB, GPIO_PIN_10 -> BIT 6 -> 0x40
+	// GPIOA, GPIO_PIN_8  -> BIT 7 -> 0x80
 
-  uint32_t a = (data & 0x01) << 8 | (data & 0x04) << 7 | (data & 0x80);
-  
-  uint32_t b = (data & 0x04) >> 1 | (data & 0x10) | (data & 0x20) >> 2 | (data & 0x40) << 3;
-  
-  uint32_t c = (data & 0x02) << 6;
-           
-  GPIOA->ODR = (GPIOA->ODR & 0xFC7F) | ((data & 0x01) << 8) | ((data & 0x04) << 7) | (data & 0x80);
-  GPIOB->ODR = (GPIOB->ODR & 0xFFE3) | ((data & 0x08) >> 1) | (data & 0x10) | ((data & 0x20) >> 2) | ((data & 0x40) << 4);
-  GPIOC->ODR = (GPIOC->ODR & 0xFFBF) | ((data & 0x02) << 5);
-  
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, (data & 0x01) !=0);
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, (data & 0x02) !=0);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10,(data & 0x04) !=0);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, (data & 0x08) !=0);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, (data & 0x10) !=0);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, (data & 0x20) !=0);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10,(data & 0x40) !=0);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, (data & 0x80) !=0);
+	GPIOA->ODR = (GPIOA->ODR & 0xF8FF) |
+			((data & 0x01) << 9) | ((data & 0x04) << 8) | ((data & 0x80) << 1);
+	GPIOB->ODR = (GPIOB->ODR & 0xFBC7) |
+			(data & 0x08) | ((data & 0x10) << 1) | ((data & 0x20) >> 1) | ((data & 0x40) << 4);
+	GPIOC->ODR = (GPIOC->ODR & 0xFF7F) | ((data & 0x02) << 6);
 
 	LCD_WR_STROBE();
 }
