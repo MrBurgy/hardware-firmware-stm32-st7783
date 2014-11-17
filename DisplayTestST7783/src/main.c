@@ -10,6 +10,22 @@
 #include "ST7783.h"
 #include "stm32f4xx_hal.h"
 
+
+/*################################ ADC1 ######################################*/
+/**
+  * @brief  ADC Interface pins
+  *         used to detect motion of Joystick available on Adafruit 1.8" TFT shield
+  */
+#define NUCLEO_ADCx                                 ADC1
+#define NUCLEO_ADCx_CLK_ENABLE()                  __ADC1_CLK_ENABLE()
+
+#define NUCLEO_ADCx_CHANNEL                       ADC_CHANNEL_8
+   
+#define NUCLEO_ADCx_GPIO_PORT                       GPIOB
+#define NUCLEO_ADCx_GPIO_PIN                        GPIO_PIN_0
+#define NUCLEO_ADCx_GPIO_CLK_ENABLE()             __GPIOB_CLK_ENABLE()
+#define NUCLEO_ADCx_GPIO_CLK_DISABLE()            __GPIOB_CLK_DISABLE()
+
 // ----------------------------------------------------------------------------
 //
 // Standalone STM32F4 empty sample (trace via NONE).
@@ -30,10 +46,15 @@
 #pragma GCC diagnostic ignored "-Wmissing-declarations"
 #pragma GCC diagnostic ignored "-Wreturn-type"
 
-ADC_HandleTypeDef hadc1;
+static ADC_HandleTypeDef hnucleo_Adc;
+static ADC_ChannelConfTypeDef sConfig;
 
 static void MX_GPIO_Init(void);
-static void MX_ADC1_Init(void);
+
+static void ADCx_Init(void);
+static void ADCx_MspInit(ADC_HandleTypeDef *hadc);
+static uint8_t BSP_JOY_Init(void);
+static void BSP_JOY_GetState(void);
 
 /**
   * @brief  This function handles SysTick Handler.
@@ -49,27 +70,10 @@ int
 main(int argc, char* argv[])
 {
 	MX_GPIO_Init();
-	MX_ADC1_Init();
-
-//	__GPIOA_CLK_ENABLE();
-//	__GPIOB_CLK_ENABLE();
-//	__GPIOC_CLK_ENABLE();
-//
-//
-//	GPIO_InitTypeDef GPIO_InitStructure;
-//
-//	// Configure pin in output push/pull mode
-//	GPIO_InitStructure.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
-//	GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-//	GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
-//	GPIO_InitStructure.Pull = GPIO_NOPULL;
-//
-//
-//
-//	HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
-//	HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
-//	HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
-
+	BSP_JOY_Init();
+  
+  BSP_JOY_GetState();
+  
 	LCD_Begin();
 	LCD_FillScreen(BLACK);
 	LCD_DrawFastHLine(0, 160, 240, WHITE);
@@ -142,27 +146,140 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
-/* ADC1 init function */
-void MX_ADC1_Init(void)
+/**
+  * @brief  Initializes ADC MSP.
+  * @param  None
+  * @retval None
+  */
+static void ADCx_MspInit(ADC_HandleTypeDef *hadc)
 {
-
-    /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
-    */
-  hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCKPRESCALER_PCLK_DIV2;
-  hadc1.Init.Resolution = ADC_RESOLUTION12b;
-  hadc1.Init.ScanConvMode = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
-  hadc1.Init.EOCSelection = EOC_SINGLE_CONV;
-  HAL_ADC_Init(&hadc1);
-
-
+  GPIO_InitTypeDef  GPIO_InitStruct;
+  
+  /*** Configure the GPIOs ***/  
+  /* Enable GPIO clock */
+  NUCLEO_ADCx_GPIO_CLK_ENABLE();
+  
+  /* Configure the selected ADC Channel as analog input */
+  GPIO_InitStruct.Pin = NUCLEO_ADCx_GPIO_PIN ;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(NUCLEO_ADCx_GPIO_PORT, &GPIO_InitStruct);
+  
+  /*** Configure the ADC peripheral ***/ 
+  /* Enable ADC clock */
+  NUCLEO_ADCx_CLK_ENABLE(); 
 }
+
+/**
+  * @brief  Initializes ADC HAL.
+  * @param  None
+  * @retval None
+  */
+static void ADCx_Init(void)
+{
+  if(HAL_ADC_GetState(&hnucleo_Adc) == HAL_ADC_STATE_RESET)
+  {
+    /* ADC Config */
+    hnucleo_Adc.Instance                   = NUCLEO_ADCx;
+    hnucleo_Adc.Init.ClockPrescaler        = ADC_CLOCKPRESCALER_PCLK_DIV4; /* (must not exceed 36MHz) */
+    hnucleo_Adc.Init.Resolution            = ADC_RESOLUTION12b;
+    hnucleo_Adc.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
+    hnucleo_Adc.Init.ContinuousConvMode    = DISABLE;
+    hnucleo_Adc.Init.DiscontinuousConvMode = DISABLE;
+    hnucleo_Adc.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    hnucleo_Adc.Init.EOCSelection          = EOC_SINGLE_CONV;
+    hnucleo_Adc.Init.NbrOfConversion       = 1;
+    hnucleo_Adc.Init.DMAContinuousRequests = DISABLE;    
+    
+    ADCx_MspInit(&hnucleo_Adc);
+    HAL_ADC_Init(&hnucleo_Adc);    
+  }
+}
+
+/**
+  * @brief  Configures joystick available on adafruit 1.8" TFT shield 
+  *         managed through ADC to detect motion.
+  * @param  None
+  * @retval Joystickstatus (0=> success, 1=> fail) 
+  */
+uint8_t BSP_JOY_Init(void)
+{
+  uint8_t status = 1;
+   
+  ADCx_Init();
+   
+  /* Select the ADC Channel to be converted */
+  sConfig.Channel = NUCLEO_ADCx_CHANNEL;
+  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  sConfig.Rank = 1;
+  status = HAL_ADC_ConfigChannel(&hnucleo_Adc, &sConfig);
+  
+  /* Return Joystick initialization status */
+  return status;
+}
+
+/**
+  * @brief  Returns the Joystick key pressed.
+  * @note   To know which Joystick key is pressed we need to detect the voltage
+  *         level on each key output
+  *           - None  : 3.3 V / 4095
+  *           - SEL   : 1.055 V / 1308
+  *           - DOWN  : 0.71 V / 88
+  *           - LEFT  : 3.0 V / 3720 
+  *           - RIGHT : 0.595 V / 737
+  *           - UP    : 1.65 V / 2046
+  */
+void BSP_JOY_GetState(void)
+{  
+  uint16_t  keyconvertedvalue = 0;
+  
+  /* Start the conversion process */
+  HAL_ADC_Start(&hnucleo_Adc);
+  
+  /* Wait for the end of conversion */
+  HAL_ADC_PollForConversion(&hnucleo_Adc, 10);
+  
+  /* Check if the continous conversion of regular channel is finished */
+  if(HAL_ADC_GetState(&hnucleo_Adc) == HAL_ADC_STATE_EOC_REG)
+  {
+    /* Get the converted value of regular channel */
+    keyconvertedvalue = HAL_ADC_GetValue(&hnucleo_Adc);
+  }
+  
+  if((keyconvertedvalue > 2010) && (keyconvertedvalue < 2090))
+  {
+    //state = JOY_UP;
+  }
+  else if((keyconvertedvalue > 680) && (keyconvertedvalue < 780))
+  {
+    //state = JOY_RIGHT;
+  }
+  else if((keyconvertedvalue > 1270) && (keyconvertedvalue < 1350))
+  {
+    //state = JOY_SEL;
+  }
+  else if((keyconvertedvalue > 50) && (keyconvertedvalue < 130))
+  {
+    //state = JOY_DOWN;
+  }
+  else if((keyconvertedvalue > 3680) && (keyconvertedvalue < 3760))
+  {
+    //state = JOY_LEFT;
+  }
+  else
+  {
+    //state = JOY_NONE;
+  }
+  
+  /* Loop while a key is pressed */
+  //if(state != JOY_NONE)
+  //{ 
+  //  keyconvertedvalue = HAL_ADC_GetValue(&hnucleo_Adc);  
+  //}
+  /* Return the code of the Joystick key pressed */
+  return state;
+}
+
 
 #pragma GCC diagnostic pop
 
