@@ -277,7 +277,7 @@ void BSP_JOY_GetState(void)
   //  keyconvertedvalue = HAL_ADC_GetValue(&hnucleo_Adc);  
   //}
   /* Return the code of the Joystick key pressed */
-  return state;
+  //return state;
 }
 
 
