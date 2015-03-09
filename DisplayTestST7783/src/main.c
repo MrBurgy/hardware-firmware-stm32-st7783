@@ -19,12 +19,12 @@
 #define NUCLEO_ADCx                                 ADC1
 #define NUCLEO_ADCx_CLK_ENABLE()                  __ADC1_CLK_ENABLE()
 
-#define NUCLEO_ADCx_CHANNEL                       ADC_CHANNEL_8
+#define NUCLEO_ADCx_CHANNEL                       ADC_CHANNEL_4
    
-#define NUCLEO_ADCx_GPIO_PORT                       GPIOB
-#define NUCLEO_ADCx_GPIO_PIN                        GPIO_PIN_0
-#define NUCLEO_ADCx_GPIO_CLK_ENABLE()             __GPIOB_CLK_ENABLE()
-#define NUCLEO_ADCx_GPIO_CLK_DISABLE()            __GPIOB_CLK_DISABLE()
+#define NUCLEO_ADCx_GPIO_PORT                       GPIOA
+#define NUCLEO_ADCx_GPIO_PIN                        GPIO_PIN_4
+#define NUCLEO_ADCx_GPIO_CLK_ENABLE()             __GPIOA_CLK_ENABLE()
+#define NUCLEO_ADCx_GPIO_CLK_DISABLE()            __GPIOA_CLK_DISABLE()
 
 // ----------------------------------------------------------------------------
 //
@@ -54,7 +54,7 @@ static void MX_GPIO_Init(void);
 static void ADCx_Init(void);
 static void ADCx_MspInit(ADC_HandleTypeDef *hadc);
 static uint8_t BSP_JOY_Init(void);
-static void BSP_JOY_GetState(void);
+static uint16_t BSP_JOY_GetState(void);
 
 /**
   * @brief  This function handles SysTick Handler.
@@ -66,22 +66,62 @@ void SysTick_Handler(void)
   HAL_IncTick();
 }
 
+
+void setPin2Output(GPIO_TypeDef  *GPIOx, uint32_t pin)
+{
+	GPIO_InitTypeDef GPIO_InitStruct;
+
+	GPIO_InitStruct.Pin = pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+	HAL_GPIO_Init(GPIOx, &GPIO_InitStruct);
+}
+
+void setPin2Input(GPIO_TypeDef  *GPIOx, uint32_t pin)
+{
+	GPIO_InitTypeDef GPIO_InitStruct;
+
+	GPIO_InitStruct.Pin = pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+	HAL_GPIO_Init(GPIOx, &GPIO_InitStruct);
+}
+
+void setPin2Analog(GPIO_TypeDef  *GPIOx, uint32_t pin)
+{
+	GPIO_InitTypeDef GPIO_InitStruct;
+
+	GPIO_InitStruct.Pin = pin ;
+	GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(GPIOx, &GPIO_InitStruct);
+}
+
 int
 main(int argc, char* argv[])
 {
 	MX_GPIO_Init();
-	BSP_JOY_Init();
-  
-  BSP_JOY_GetState();
-  
+
 	LCD_Begin();
 	LCD_FillScreen(BLACK);
 	LCD_DrawFastHLine(0, 160, 240, WHITE);
 	LCD_DrawCircle(120, 160, 100, WHITE);
 
+	BSP_JOY_Init();
+
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
+
+
+	//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
+	//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
+
 	// Infinite loop
 	while (1)
 	{
+	   uint16_t x = BSP_JOY_GetState();
 	   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
 	   HAL_Delay(1000);
 	   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
@@ -229,7 +269,7 @@ uint8_t BSP_JOY_Init(void)
   *           - RIGHT : 0.595 V / 737
   *           - UP    : 1.65 V / 2046
   */
-void BSP_JOY_GetState(void)
+uint16_t BSP_JOY_GetState(void)
 {  
   uint16_t  keyconvertedvalue = 0;
   
@@ -246,38 +286,7 @@ void BSP_JOY_GetState(void)
     keyconvertedvalue = HAL_ADC_GetValue(&hnucleo_Adc);
   }
   
-  if((keyconvertedvalue > 2010) && (keyconvertedvalue < 2090))
-  {
-    //state = JOY_UP;
-  }
-  else if((keyconvertedvalue > 680) && (keyconvertedvalue < 780))
-  {
-    //state = JOY_RIGHT;
-  }
-  else if((keyconvertedvalue > 1270) && (keyconvertedvalue < 1350))
-  {
-    //state = JOY_SEL;
-  }
-  else if((keyconvertedvalue > 50) && (keyconvertedvalue < 130))
-  {
-    //state = JOY_DOWN;
-  }
-  else if((keyconvertedvalue > 3680) && (keyconvertedvalue < 3760))
-  {
-    //state = JOY_LEFT;
-  }
-  else
-  {
-    //state = JOY_NONE;
-  }
-  
-  /* Loop while a key is pressed */
-  //if(state != JOY_NONE)
-  //{ 
-  //  keyconvertedvalue = HAL_ADC_GetValue(&hnucleo_Adc);  
-  //}
-  /* Return the code of the Joystick key pressed */
-  //return state;
+  return keyconvertedvalue;
 }
 
 
