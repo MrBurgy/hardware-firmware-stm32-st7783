@@ -9,7 +9,7 @@
 //#include "diag/Trace.h"
 #include "ST7783.h"
 #include "stm32f4xx_hal.h"
-
+#include "Touch.h"
 
 /*################################ ADC1 ######################################*/
 /**
@@ -111,21 +111,20 @@ main(int argc, char* argv[])
 
 	BSP_JOY_Init();
 
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
-
-
-	//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
-	//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);
+	Touch_Init();
 
 	// Infinite loop
 	while (1)
 	{
-	   uint16_t x = BSP_JOY_GetState();
-	   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-	   HAL_Delay(1000);
-	   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-	   HAL_Delay(1000);
+		uint16_t x = Touch_GetX();
+		uint16_t y = Touch_GetY();
+
+		//Touch_Getraw(&x, &y);
+
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+		HAL_Delay(1000);
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+		HAL_Delay(1000);
 	}
 }
 
@@ -187,7 +186,7 @@ void MX_GPIO_Init(void)
 }
 
 /**
-  * @brief  Initializes ADC MSP.
+  * @brief  Initializes ADC MSP. (MSP MCU Specific Package)
   * @param  None
   * @retval None
   */
