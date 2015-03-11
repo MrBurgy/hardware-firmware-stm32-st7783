@@ -118,7 +118,7 @@ main(int argc, char* argv[])
 	// Infinite loop
 	while (1)
 	{
-		uint16_t x = Touch_GetX();
+		//uint16_t x = Touch_GetX();
 		uint16_t y = Touch_GetY();
 
 		//Touch_Getraw(&x, &y);

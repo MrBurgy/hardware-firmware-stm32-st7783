@@ -178,7 +178,7 @@ void LCD_Begin(void)
 	m_height   = TFTHEIGHT;
 	m_rotation  = 0;
 	m_cursor_y  = m_cursor_x    = 0;
-	m_textsize  = 1;
+	m_textsize  = 4;
 	m_textcolor = m_textbgcolor = 0xFFFF;
 	m_wrap      = 1;
 
@@ -597,8 +597,9 @@ void LCD_Printf(const char *fmt, ...)
 				m_row++;
 				m_col = 0;
 			}
-			LCD_DrawChar(m_row, m_col++, *p,
+			LCD_DrawChar((m_col * m_textsize * 10) + 1, m_row, *p,
 					m_textcolor, m_textbgcolor, m_textsize);
+			m_col++;
 		}
 		p++;
 	}
