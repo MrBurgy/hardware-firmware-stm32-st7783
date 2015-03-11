@@ -5,6 +5,13 @@
 
 #include "ST7783.h"
 #include "stm32f4xx_hal.h"
+#include "glcdfont.h"
+
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <assert.h>
+#include <math.h>
 
 #define TFTWIDTH   240
 #define TFTHEIGHT  320
@@ -40,6 +47,21 @@
 
 #define LCD_WR_STROBE() { LCD_WR_LOW(); delay(1); LCD_WR_HIGH(); delay(1); }
 
+const int16_t WIDTH, HEIGHT;
+
+static int16_t m_width;
+static int16_t m_height;
+static int16_t m_cursor_x;
+static int16_t m_cursor_y;
+
+static uint16_t m_textcolor;
+static uint16_t m_textbgcolor;
+static uint8_t m_textsize;
+static uint8_t m_rotation;
+static uint8_t m_wrap;
+
+static uint16_t m_row;
+static uint16_t m_col;
 
 static const uint16_t ST7781_regValues[] = {
 	0x0001,0x0100,
@@ -151,13 +173,24 @@ void delay(unsigned int t)
 
 void LCD_Begin(void)
 {
+
+	m_width    = TFTWIDTH;
+	m_height   = TFTHEIGHT;
+	m_rotation  = 0;
+	m_cursor_y  = m_cursor_x    = 0;
+	m_textsize  = 1;
+	m_textcolor = m_textbgcolor = 0xFFFF;
+	m_wrap      = 1;
+
+
+
 	uint8_t i = 0;
-  uint16_t a, d;
-  
-	LCD_Reset();	
-	
+	uint16_t a, d;
+
+	LCD_Reset();
+
 	LCD_CS_LOW();
-  
+
 	while(i < sizeof(ST7781_regValues) / sizeof(uint16_t)) {
 		a = ST7781_regValues[i++];
 		d = ST7781_regValues[i++];
@@ -167,7 +200,7 @@ void LCD_Begin(void)
 			LCD_WriteRegister16(a, d);
 		}
 	}
-	
+
   //setRotation(m_rotation);
 	LCD_SetAddrWindow(0, 0, TFTWIDTH-1, TFTHEIGHT-1);
 }
@@ -349,6 +382,37 @@ void LCD_Flood(uint16_t color, uint32_t len)
 	LCD_CS_HIGH();
 }
 
+
+void LCD_FillRect(int16_t x1, int16_t y1, int16_t w, int16_t h, uint16_t fillcolor)
+{
+  int16_t  x2, y2;
+
+  // Initial off-screen clipping
+  if( (w            <= 0     ) ||  (h             <= 0      ) ||
+      (x1           >= m_width) ||  (y1            >= m_height) ||
+     ((x2 = x1+w-1) <  0     ) || ((y2  = y1+h-1) <  0      )) return;
+  if(x1 < 0) { // Clip left
+    w += x1;
+    x1 = 0;
+  }
+  if(y1 < 0) { // Clip top
+    h += y1;
+    y1 = 0;
+  }
+  if(x2 >= m_width) { // Clip right
+    x2 = m_width - 1;
+    w  = x2 - x1 + 1;
+  }
+  if(y2 >= m_height) { // Clip bottom
+    y2 = m_height - 1;
+    h  = y2 - y1 + 1;
+  }
+
+  LCD_SetAddrWindow(x1, y1, x2, y2);
+  LCD_Flood(fillcolor, (uint32_t)w * (uint32_t)h);
+  LCD_SetAddrWindow(0, 0, m_width - 1, m_height - 1);
+}
+
 void LCD_FillScreen(uint16_t color)
 {
 	// For the 932X, a full-screen address window is already the default
@@ -457,4 +521,85 @@ void LCD_DrawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
     LCD_DrawPixel(x0 + y, y0 - x, color);
     LCD_DrawPixel(x0 - y, y0 - x, color);
   }
+}
+
+void LCD_SetCursor(unsigned int x, unsigned int y)
+{
+	m_cursor_x = x;
+	m_cursor_y = y;
+}
+
+void LCD_SetTextSize(uint8_t s)
+{
+	m_textsize = (s > 0) ? s : 1;
+}
+
+void LCD_setTextColor(uint16_t c, uint16_t b) {
+  m_textcolor   = c;
+  m_textbgcolor = b;
+}
+
+void LCD_DrawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size)
+{
+	 if((x >= m_width)            || // Clip right
+		 (y >= m_height)           || // Clip bottom
+		 ((x + 6 * size - 1) < 0) || // Clip left
+		 ((y + 8 * size - 1) < 0))   // Clip top
+		return;
+
+	  for (int8_t i=0; i<6; i++ ) {
+		uint8_t line;
+		if (i == 5)
+		  line = 0x0;
+		else
+		  line = font[c*5 + i];//pgm_read_byte(font+(c*5)+i);
+		for (int8_t j = 0; j<8; j++) {
+		  if (line & 0x1) {
+			if (size == 1) // default size
+				LCD_DrawPixel(x+i, y+j, color);
+			else {  // big size
+			  LCD_FillRect(x+(i*size), y+(j*size), size, size, color);
+			}
+		  } else if (bg != color) {
+			if (size == 1) // default size
+				LCD_DrawPixel(x+i, y+j, bg);
+			else {  // big size
+				LCD_FillRect(x+i*size, y+j*size, size, size, bg);
+			}
+		  }
+		  line >>= 1;
+		}
+	  }
+}
+
+void LCD_Printf(const char *fmt, ...)
+{
+	static char buf[256];
+	char *p;
+	va_list lst;
+
+	va_start(lst, fmt);
+	vsprintf(buf, fmt, lst);
+	va_end(lst);
+
+	p = buf;
+	while(*p) {
+		if(*p == '\n') {
+			while(m_col < 15) {
+				LCD_DrawChar(m_row, m_col++, ' ',
+						m_textcolor, m_textbgcolor, m_textsize);
+			}
+
+			m_row++;
+			m_col = 0;
+		} else {
+			if(m_col >= 15) {
+				m_row++;
+				m_col = 0;
+			}
+			LCD_DrawChar(m_row, m_col++, *p,
+					m_textcolor, m_textbgcolor, m_textsize);
+		}
+		p++;
+	}
 }

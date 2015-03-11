@@ -108,10 +108,12 @@ main(int argc, char* argv[])
 	LCD_FillScreen(BLACK);
 	LCD_DrawFastHLine(0, 160, 240, WHITE);
 	LCD_DrawCircle(120, 160, 100, WHITE);
+	LCD_SetCursor(0, 0);
+	LCD_Printf("Display Test");
 
 	BSP_JOY_Init();
 
-	Touch_Init();
+	//Touch_Init();
 
 	// Infinite loop
 	while (1)

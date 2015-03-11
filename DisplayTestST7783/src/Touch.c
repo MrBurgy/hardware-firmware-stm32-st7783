@@ -161,22 +161,22 @@ void Touch_Init(void)
 
 uint16_t Touch_GetX(void)
 {
-	GPIO_SetInputPulledUp(TS_PORT_YP, TS_PIN_YP);
+	//GPIO_SetInputPulledUp(TS_PORT_YP, TS_PIN_YP);
 	GPIO_SetInputPulledUp(TS_PORT_YM, TS_PIN_YM);
 
 	GPIO_SetOutput(TS_PORT_XP, TS_PIN_XP, GPIO_PIN_SET);
-	GPIO_SetOutput(TS_PORT_XM, TS_PIN_XM, GPIO_PIN_RESET);
+	GPIO_SetOutput(TS_PORT_YM, TS_PIN_YM, GPIO_PIN_RESET);
 
 	return ADC_Measure(TS_ADCCH_YP);
 }
 
 uint16_t Touch_GetY(void)
 {
-	GPIO_SetInputPulledUp(TS_PORT_XP, TS_PIN_XP);
+	//GPIO_SetInputPulledUp(TS_PORT_XP, TS_PIN_XP);
 	GPIO_SetInputPulledUp(TS_PORT_XM, TS_PIN_XM);
 
-	GPIO_SetOutput(TS_PORT_YP, TS_PIN_YP, GPIO_PIN_SET);
-	GPIO_SetOutput(TS_PORT_YM, TS_PIN_YM, GPIO_PIN_RESET);
+	GPIO_SetOutput(TS_PORT_XP, TS_PIN_XP, GPIO_PIN_RESET);
+	GPIO_SetOutput(TS_PORT_YM, TS_PIN_YM, GPIO_PIN_SET);
 
 	return ADC_Measure(TS_ADCCH_XM);
 }
