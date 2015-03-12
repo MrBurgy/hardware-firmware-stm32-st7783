@@ -116,6 +116,11 @@ main(int argc, char* argv[])
 
 	//Touch_Init();
 
+	uint8_t n = 0;
+
+	LCD_SetTextColor(WHITE, BLACK);
+	LCD_SetTextSize(3);
+
 	// Infinite loop
 	while (1)
 	{
@@ -126,13 +131,13 @@ main(int argc, char* argv[])
 		sprintf(buf, "%d", y);
 
 		LCD_SetCursor(0, 0);
-		LCD_SetTextColor(WHITE, BLACK);
-		LCD_SetTextSize(3);
 		LCD_Printf(buf);
 
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-		HAL_Delay(1000);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+		memset(buf, 0, 10);
+		LCD_SetCursor(185, 0);
+		sprintf(buf, "%d", n++);
+		LCD_Printf(buf);
+
 		HAL_Delay(1000);
 	}
 }

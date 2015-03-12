@@ -97,6 +97,7 @@ static void GPIO_SetAnalog(GPIO_TypeDef  *GPIOx, uint16_t pin)
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOx, &GPIO_InitStruct);
+
 }
 
 
@@ -174,8 +175,9 @@ uint16_t Touch_GetX(void)
 uint16_t Touch_GetY(void)
 {
 	//GPIO_SetInputPulledUp(TS_PORT_XP, TS_PIN_XP);
-	GPIO_SetInputPulledUp(TS_PORT_XM, TS_PIN_XM);
-	//GPIO_SetAnalog(TS_PIN_XM, TS_PIN_XM);
+	//GPIO_SetInputPulledUp(TS_PORT_XM, TS_PIN_XM);
+	GPIO_SetInputPulledUp(TS_PIN_YP, TS_PIN_YP);
+	GPIO_SetInputPulledUp(TS_PIN_XM, TS_PIN_XM);
 
 	GPIO_SetOutput(TS_PORT_XP, TS_PIN_XP, GPIO_PIN_RESET);
 	GPIO_SetOutput(TS_PORT_YM, TS_PIN_YM, GPIO_PIN_SET);
