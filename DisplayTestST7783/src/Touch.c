@@ -109,12 +109,13 @@ static void GPIO_SetOutput(GPIO_TypeDef  *GPIOx, uint16_t pin, int val)
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
 	HAL_GPIO_Init(GPIOx, &GPIO_InitStruct);
-  
-  if(val) {		
-    HAL_GPIO_WritePin(GPIOx, pin, GPIO_PIN_SET);
-	} else {
-		HAL_GPIO_WritePin(GPIOx, pin, GPIO_PIN_SET);
-	}
+
+	HAL_GPIO_WritePin(GPIOx, pin, val);
+//  if(val) {
+//    HAL_GPIO_WritePin(GPIOx, pin, GPIO_PIN_SET);
+//	} else {
+//		HAL_GPIO_WritePin(GPIOx, pin, GPIO_PIN_SET);
+//	}
 }
 
 static void GPIO_SetInputPulledUp(GPIO_TypeDef  *GPIOx, uint16_t pin)

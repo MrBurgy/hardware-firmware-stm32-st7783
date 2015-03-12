@@ -108,6 +108,7 @@ main(int argc, char* argv[])
 	LCD_FillScreen(BLACK);
 	LCD_DrawFastHLine(0, 160, 240, WHITE);
 	LCD_DrawCircle(120, 160, 100, WHITE);
+	LCD_DrawRect(10, 10, 300, 220, WHITE);
 	LCD_SetCursor(0, 0);
 	LCD_Printf("Display Test");
 
