@@ -105,12 +105,12 @@ main(int argc, char* argv[])
 	MX_GPIO_Init();
 
 	LCD_Begin();
+	LCD_SetRotation(0);
 	LCD_FillScreen(BLACK);
 	LCD_DrawFastHLine(0, 160, 240, WHITE);
 	LCD_DrawCircle(120, 160, 100, WHITE);
-	LCD_DrawRect(10, 10, 300, 220, WHITE);
-	LCD_SetCursor(0, 0);
-	LCD_Printf("Display Test");
+	LCD_DrawRect(20, 40, 200, 240, WHITE);
+
 
 	BSP_JOY_Init();
 
@@ -122,7 +122,13 @@ main(int argc, char* argv[])
 		//uint16_t x = Touch_GetX();
 		uint16_t y = Touch_GetY();
 
-		//Touch_Getraw(&x, &y);
+		char buf[10] = { 0 };
+		sprintf(buf, "%d", y);
+
+		LCD_SetCursor(0, 0);
+		LCD_SetTextColor(WHITE, BLACK);
+		LCD_SetTextSize(3);
+		LCD_Printf(buf);
 
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
 		HAL_Delay(1000);

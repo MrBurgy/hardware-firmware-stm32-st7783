@@ -46,8 +46,6 @@
 
 #define swap(a, b) { int16_t t = a; a = b; b = t; }
 
-const int16_t WIDTH, HEIGHT;
-
 static int16_t m_width;
 static int16_t m_height;
 static int16_t m_cursor_x;
@@ -673,13 +671,13 @@ void LCD_SetRotation(uint8_t x)
 	switch(m_rotation) {
 	case 0:
 	case 2:
-		m_width  = WIDTH;
-		m_height = HEIGHT;
+		m_width  = TFTWIDTH;
+		m_height = TFTHEIGHT;
 		break;
 	case 1:
 	case 3:
-		m_width  = HEIGHT;
-		m_height = WIDTH;
+		m_width  = TFTHEIGHT;
+		m_height = TFTWIDTH;
 		break;
 	}
 }
