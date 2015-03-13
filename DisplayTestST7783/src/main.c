@@ -114,7 +114,7 @@ main(int argc, char* argv[])
 
 	//BSP_JOY_Init();
 
-	//Touch_Init();
+	Touch_Init();
 
 	uint8_t n = 0;
 
@@ -124,19 +124,20 @@ main(int argc, char* argv[])
 	// Infinite loop
 	while (1)
 	{
-		//uint16_t x = Touch_GetX();
+		uint16_t x = Touch_GetX();
 		uint16_t y = Touch_GetY();
 
-		char buf[10] = { 0 };
-		sprintf(buf, "%d     ", y);
+		char buf[20] = { ' ' };
+		sprintf(buf, "%d, %d      ", x, y);
+		buf[10] = 0;
 
 		LCD_SetCursor(0, 0);
 		LCD_Printf(buf);
 
-		memset(buf, 0, 10);
-		LCD_SetCursor(185, 0);
-		sprintf(buf, "%d  ", n++);
-		LCD_Printf(buf);
+//		memset(buf, 0, 10);
+//		LCD_SetCursor(185, 0);
+//		sprintf(buf, "%d ", n++);
+//		LCD_Printf(buf);
 
 		HAL_Delay(1000);
 	}

@@ -75,18 +75,16 @@ static void ADCx_Init(void)
 
 static uint8_t ADCx_Channel_Init(uint16_t channel)
 {
-  uint8_t status = 1;
-   
-  ADCx_Init();
-   
-  /* Select the ADC Channel to be converted */
-  sConfig.Channel = channel;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-  sConfig.Rank = 1;
-  status = HAL_ADC_ConfigChannel(&hnucleo_Adc, &sConfig);
-  
-  /* Return initialization status */
-  return status;
+	uint8_t status = 1;
+
+	/* Select the ADC Channel to be converted */
+	sConfig.Channel = channel;
+	sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+	sConfig.Rank = 1;
+	status = HAL_ADC_ConfigChannel(&hnucleo_Adc, &sConfig);
+
+	/* Return initialization status */
+	return status;
 }
 
 static void GPIO_SetAnalog(GPIO_TypeDef  *GPIOx, uint16_t pin)
@@ -100,10 +98,9 @@ static void GPIO_SetAnalog(GPIO_TypeDef  *GPIOx, uint16_t pin)
 
 }
 
-
 static void GPIO_SetOutput(GPIO_TypeDef  *GPIOx, uint16_t pin, int val)
 {  
-  GPIO_InitTypeDef GPIO_InitStruct;
+	GPIO_InitTypeDef GPIO_InitStruct;
 
 	GPIO_InitStruct.Pin = pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -112,11 +109,6 @@ static void GPIO_SetOutput(GPIO_TypeDef  *GPIOx, uint16_t pin, int val)
 	HAL_GPIO_Init(GPIOx, &GPIO_InitStruct);
 
 	HAL_GPIO_WritePin(GPIOx, pin, val);
-//  if(val) {
-//    HAL_GPIO_WritePin(GPIOx, pin, GPIO_PIN_SET);
-//	} else {
-//		HAL_GPIO_WritePin(GPIOx, pin, GPIO_PIN_SET);
-//	}
 }
 
 static void GPIO_SetInputPulledUp(GPIO_TypeDef  *GPIOx, uint16_t pin)
@@ -163,28 +155,35 @@ void Touch_Init(void)
 
 uint16_t Touch_GetX(void)
 {
-	//GPIO_SetInputPulledUp(TS_PORT_YP, TS_PIN_YP);
-	GPIO_SetInputPulledUp(TS_PORT_YM, TS_PIN_YM);
+	GPIO_SetAnalog(TS_PORT_YP, TS_PIN_YP);
+	GPIO_SetOutput(TS_PORT_XM, TS_PIN_XM, GPIO_PIN_SET);
 
 	GPIO_SetOutput(TS_PORT_XP, TS_PIN_XP, GPIO_PIN_SET);
 	GPIO_SetOutput(TS_PORT_YM, TS_PIN_YM, GPIO_PIN_RESET);
 
-	return ADC_Measure(TS_ADCCH_YP);
+	delay(100);
+
+	uint32_t x = ADC_Measure(TS_ADCCH_YP);
+
+	GPIO_SetOutput(TS_PORT_YP, TS_PIN_YP, GPIO_PIN_RESET);
+	GPIO_SetOutput(TS_PORT_XM, TS_PIN_XM, GPIO_PIN_RESET);
+
+	return x;
 }
 
 uint16_t Touch_GetY(void)
 {
-	//GPIO_SetInputPulledUp(TS_PORT_XP, TS_PIN_XP);
-	//GPIO_SetInputPulledUp(TS_PORT_XM, TS_PIN_XM);
-	//GPIO_SetInputPulledUp(TS_PORT_YP, TS_PIN_YP);
-	//GPIO_SetInputPulledUp(TS_PORT_XM, TS_PIN_XM);
+	GPIO_SetOutput(TS_PORT_YP, TS_PIN_YP, GPIO_PIN_SET);
 	GPIO_SetAnalog(TS_PORT_XM, TS_PIN_XM);
 
 	GPIO_SetOutput(TS_PORT_XP, TS_PIN_XP, GPIO_PIN_RESET);
 	GPIO_SetOutput(TS_PORT_YM, TS_PIN_YM, GPIO_PIN_SET);
 
+	delay(100);
+
 	uint16_t y = ADC_Measure(TS_ADCCH_XM);
 
+	GPIO_SetOutput(TS_PORT_YP, TS_PIN_YP, GPIO_PIN_RESET);
 	GPIO_SetOutput(TS_PORT_XM, TS_PIN_XM, GPIO_PIN_RESET);
 
 	return y;
