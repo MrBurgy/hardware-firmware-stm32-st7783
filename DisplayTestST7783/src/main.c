@@ -112,7 +112,7 @@ main(int argc, char* argv[])
 	LCD_DrawRect(20, 40, 200, 240, WHITE);
 
 
-	BSP_JOY_Init();
+	//BSP_JOY_Init();
 
 	//Touch_Init();
 
@@ -128,14 +128,14 @@ main(int argc, char* argv[])
 		uint16_t y = Touch_GetY();
 
 		char buf[10] = { 0 };
-		sprintf(buf, "%d", y);
+		sprintf(buf, "%d     ", y);
 
 		LCD_SetCursor(0, 0);
 		LCD_Printf(buf);
 
 		memset(buf, 0, 10);
 		LCD_SetCursor(185, 0);
-		sprintf(buf, "%d", n++);
+		sprintf(buf, "%d  ", n++);
 		LCD_Printf(buf);
 
 		HAL_Delay(1000);

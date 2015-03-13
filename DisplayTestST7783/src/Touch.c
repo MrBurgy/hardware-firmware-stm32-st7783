@@ -7,12 +7,12 @@
 #define TS_PIN_XP	GPIO_PIN_10
 #define TS_PIN_XM	GPIO_PIN_4
 #define TS_PIN_YP	GPIO_PIN_1
-#define TS_PIN_YM	GPIO_PIN_4
+#define TS_PIN_YM	GPIO_PIN_8
 
 #define TS_PORT_XP	GPIOB
 #define TS_PORT_XM	GPIOA
 #define TS_PORT_YP	GPIOA
-#define TS_PORT_YM	GPIOB
+#define TS_PORT_YM	GPIOA
 
 #define TS_ADCCH_XM	ADC_CHANNEL_4
 #define TS_ADCCH_YP	ADC_CHANNEL_1
@@ -176,8 +176,9 @@ uint16_t Touch_GetY(void)
 {
 	//GPIO_SetInputPulledUp(TS_PORT_XP, TS_PIN_XP);
 	//GPIO_SetInputPulledUp(TS_PORT_XM, TS_PIN_XM);
-	GPIO_SetInputPulledUp(TS_PIN_YP, TS_PIN_YP);
-	GPIO_SetInputPulledUp(TS_PIN_XM, TS_PIN_XM);
+	//GPIO_SetInputPulledUp(TS_PORT_YP, TS_PIN_YP);
+	//GPIO_SetInputPulledUp(TS_PORT_XM, TS_PIN_XM);
+	GPIO_SetAnalog(TS_PORT_XM, TS_PIN_XM);
 
 	GPIO_SetOutput(TS_PORT_XP, TS_PIN_XP, GPIO_PIN_RESET);
 	GPIO_SetOutput(TS_PORT_YM, TS_PIN_YM, GPIO_PIN_SET);
