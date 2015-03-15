@@ -1,5 +1,4 @@
 
-/* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __ST7783_H
 #define __ST7783_H
 

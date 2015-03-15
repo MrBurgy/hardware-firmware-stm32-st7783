@@ -1,7 +1,20 @@
 /*
  * STM7783.c
  * 
+ * Grafic LCD Function (Chip=ST7783)
+ *
+ * This code has been taken from the Adafruit TFT Library and modified
+ * for use with TFT Shields / Modules
+ * For original code / licensing please refer to
+ * https://github.com/adafruit/TFTLCD-Library
+ *
+ * This code has been taken from Smoke And Wires
+ * for use with TFT Shields / Modules
+ * For original code / licensing please refer to
+ * http://www.smokeandwires.co.nz
+ *
  */
+
 
 #include <stdlib.h>
 #include <stdarg.h>

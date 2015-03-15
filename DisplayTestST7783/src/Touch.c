@@ -35,17 +35,9 @@ static void delay(volatile int i)
   */
 static void ADCx_MspInit(void)
 {
-  //GPIO_InitTypeDef  GPIO_InitStruct;
-  
   /*** Configure the GPIOs ***/  
   /* Enable GPIO clock */
   TS_ADCx_GPIO_CLK_ENABLE();
-  
-//  /* Configure the selected ADC Channel as analog input */
-//  GPIO_InitStruct.Pin = NUCLEO_ADCx_GPIO_PIN ;
-//  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-//  GPIO_InitStruct.Pull = GPIO_NOPULL;
-//  HAL_GPIO_Init(TS_ADC_PORT, &GPIO_InitStruct);
   
   /*** Configure the ADC peripheral ***/ 
   /* Enable ADC clock */
@@ -111,21 +103,6 @@ static void GPIO_SetOutput(GPIO_TypeDef  *GPIOx, uint16_t pin, int val)
 	HAL_GPIO_WritePin(GPIOx, pin, val);
 }
 
-static void GPIO_SetInputPulledUp(GPIO_TypeDef  *GPIOx, uint16_t pin)
-{	  
-	GPIO_InitTypeDef GPIO_InitStruct;
-
-	GPIO_InitStruct.Pin = pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;	
-	HAL_GPIO_Init(GPIOx, &GPIO_InitStruct); 
-}
-
-static int GPIO_GetInputState(GPIO_TypeDef  *GPIOx, uint16_t pin)
-{
-	return 0;//GPIO_ReadInputDataBit(TS_PORT, pin);
-}
-
 static uint16_t ADC_Measure(uint16_t ch)
 {
 	ADCx_Channel_Init(ch);
@@ -187,66 +164,4 @@ uint16_t Touch_GetY(void)
 	GPIO_SetOutput(TS_PORT_XM, TS_PIN_XM, GPIO_PIN_RESET);
 
 	return y;
-}
-
-void Touch_Getraw(uint16_t *adc_x, uint16_t *adc_y)
-{
-	//* x ************************************
-	GPIO_SetInputPulledUp(TS_PORT_YP, TS_PIN_YP);
-	GPIO_SetInputPulledUp(TS_PORT_YM, TS_PIN_YM);
-
-	GPIO_SetOutput(TS_PORT_XP, TS_PIN_XP, GPIO_PIN_SET);
-	GPIO_SetOutput(TS_PORT_XM, TS_PIN_XM, GPIO_PIN_RESET);
-
-	*adc_x = ADC_Measure(TS_ADCCH_YP);
-
-	//* y ************************************
-	GPIO_SetInputPulledUp(TS_PORT_XP, TS_PIN_XP);
-	GPIO_SetInputPulledUp(TS_PORT_XM, TS_PIN_XM);
-
-	GPIO_SetOutput(TS_PORT_YP, TS_PIN_YP, GPIO_PIN_SET);
-	GPIO_SetOutput(TS_PORT_YM, TS_PIN_YM, GPIO_PIN_RESET);
-
-	*adc_y = ADC_Measure(TS_ADCCH_XM);
-
-
-
-	
-	/*
-	 * YD=0 YU=1, measure XL and XR
-	 * YD=1 YU=0, measure XL and XR
-	 * The average of the previous four samples is the X value.
-	 *
-	 * XL=0 XR=1, measure YD and YU
-	 * XL=1 XR=0, measure YD and YU
-	 * The average of the previous four samples is the Y value.
-	 *
-	 * A total of 8 ADC measurements are needed!
-	 */
-	
-//	GPIO_SetAnalog(GPIOA, TS_PIN_YP | TS_PIN_XP);
-//	GPIO_SetOutput(GPIOB, TS_PIN_YM, 0);
-//	GPIO_SetOutput(GPIOB, TS_PIN_XM, 1);
-//	delay(100);
-//	//val1 = (ADC_Measure(TS_ADCCH_XL) + ADC_Measure(TS_ADCCH_XM))/2;
-//
-//	GPIO_SetOutput(GPIOB, TS_PIN_YM, 1);
-//	GPIO_SetOutput(GPIOB,TS_PIN_XM, 0);
-//	delay(100);
-//	//val2 = (ADC_Measure(TS_ADCCH_XL) + ADC_Measure(TS_ADCCH_XM))/2;
-//
-//	*adc_y = (val1+((1<<12)-val2))/4;
-//
-//	GPIO_SetAnalog(GPIOA, TS_PIN_YM | TS_PIN_XM);
-//	GPIO_SetOutput(GPIOB, TS_PIN_YP, 0);
-//	GPIO_SetOutput(GPIOB, TS_PIN_XP, 1);
-//	delay(100);
-//	//val1 = (ADC_Measure(TS_ADCCH_YD) + ADC_Measure(TS_ADCCH_YP))/2;
-//
-//	GPIO_SetOutput(GPIOB, TS_PIN_YP, 1);
-//	GPIO_SetOutput(GPIOB, TS_PIN_XP, 0);
-//	delay(100);
-//	//val2 = (ADC_Measure(TS_ADCCH_YD) + ADC_Measure(TS_ADCCH_YP))/2;
-//
-//	*adc_x = (val1+((1<<12)-val2))/4;
 }
