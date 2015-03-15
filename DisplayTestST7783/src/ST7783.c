@@ -163,6 +163,40 @@ void delay(unsigned int t)
 }
 
 
+static void GPIO_Init(void)
+{
+
+	GPIO_InitTypeDef GPIO_InitStruct;
+
+	/* GPIO Ports Clock Enable */
+	__GPIOC_CLK_ENABLE();
+	__GPIOA_CLK_ENABLE();
+	__GPIOB_CLK_ENABLE();
+
+	/*Configure GPIO pins : PC1 PC7 */
+	GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_7;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+	/*Configure GPIO pins : PA0 PA2 PA5 PA8
+					   PA9 PA10 */
+	GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_2|GPIO_PIN_8
+					  |GPIO_PIN_9|GPIO_PIN_10 | GPIO_PIN_1|GPIO_PIN_4;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	/*Configure GPIO pins : PB0 PB10 PB4 PB5 */
+	GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_3|GPIO_PIN_10|GPIO_PIN_4|GPIO_PIN_5;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+}
+
 void LCD_Begin(void)
 {
 	m_width     = TFTWIDTH;
@@ -175,6 +209,8 @@ void LCD_Begin(void)
 
 	uint8_t i = 0;
 	uint16_t a, d;
+
+	GPIO_Init();
 
 	LCD_Reset();
 
