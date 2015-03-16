@@ -29,7 +29,6 @@ void LCD_DrawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 void LCD_DrawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
 void LCD_DrawCircleHelper( int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color);
 void LCD_DrawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
-void LCD_DrawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color);
 void LCD_DrawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size);
 void LCD_FillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
 void LCD_FillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color);

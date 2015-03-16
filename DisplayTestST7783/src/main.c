@@ -33,6 +33,11 @@
 #pragma GCC diagnostic ignored "-Wreturn-type"
 
 
+extern uint16_t map(uint16_t x, uint16_t in_min, uint16_t in_max, uint16_t out_min, uint16_t out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 /**
   * @brief  This function handles SysTick Handler.
   * @param  None
@@ -56,9 +61,14 @@ int main(int argc, char* argv[])
 	LCD_Begin();
 	LCD_SetRotation(0);
 	LCD_FillScreen(BLACK);
-	LCD_DrawFastHLine(0, 160, 240, WHITE);
-	LCD_DrawCircle(120, 160, 100, WHITE);
-	LCD_DrawRect(20, 40, 200, 240, WHITE);
+	for (int x = 40; x < 320; x+=40) {
+		LCD_DrawFastHLine(0, x, 240, WHITE);
+	}
+
+	for (int y = 40; y < 240; y+=40) {
+		LCD_DrawFastVLine(y, 40, 280, WHITE);
+	}
+
 
 	Touch_Begin();
 
@@ -71,14 +81,32 @@ int main(int argc, char* argv[])
 		uint16_t x = Touch_GetX();
 		uint16_t y = Touch_GetY();
 
-		char buf[20] = { ' ' };
-		sprintf(buf, "%d, %d      ", x, y);
-		buf[10] = 0;
+		if(x > 100 && y > 100) {
+			uint16_t xAvg = 0;
+			uint16_t yAvg = 0;
+			for(uint8_t n = 0; n < 10; n++) {
+				xAvg += Touch_GetX();
+				yAvg += Touch_GetY();
+			}
+			xAvg /= 10;
+			yAvg /= 10;
 
-		LCD_SetCursor(0, 0);
-		LCD_Printf(buf);
+			y = map(yAvg, 220, 1200, 0, 240);
+			x = map(xAvg, 2300, 580, 0, 320);
 
-		HAL_Delay(500);
+			char buf[20] = { ' ' };
+			sprintf(buf, "%d, %d      ", x, y);
+			buf[10] = 0;
+
+			LCD_SetCursor(0, 0);
+			LCD_Printf(buf);
+
+			LCD_FillRect(y, x, 3, 3, YELLOW);
+		}
+
+
+
+		//HAL_Delay(500);
 	}
 }
 

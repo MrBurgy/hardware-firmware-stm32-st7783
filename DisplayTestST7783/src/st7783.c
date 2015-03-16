@@ -604,19 +604,6 @@ void LCD_DrawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_
 	}
 }
 
-void LCD_DrawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color)
-{
-	int16_t i, j, byteWidth = (w + 7) / 8;
-
-	for(j=0; j<h; j++) {
-		for(i=0; i<w; i++ ) {
-			if(*(bitmap + j * byteWidth + i / 8) & (128 >> (i & 7))) {
-				LCD_DrawPixel(x+i, y+j, color);
-			}
-		}
-	}
-}
-
 /**
  * \brief Draws a filled circle defined by a pair of coordinates and radius
  * 
