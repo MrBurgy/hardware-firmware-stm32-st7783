@@ -10,9 +10,9 @@
 
 #include <stdio.h>
 //#include "diag/Trace.h"
-#include "ST7783.h"
+#include "st7783.h"
 #include "stm32f4xx_hal.h"
-#include "Touch.h"
+#include "touch.h"
 
 
 // ----------------------------------------------------------------------------

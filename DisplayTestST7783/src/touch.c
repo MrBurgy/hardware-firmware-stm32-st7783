@@ -7,7 +7,7 @@
  *
  */
 
-#include "Touch.h"
+#include "touch.h"
 
 #define TS_ADCx_CLK_ENABLE()                  __ADC1_CLK_ENABLE()
 #define TS_ADCx_GPIO_CLK_ENABLE()             __GPIOA_CLK_ENABLE()
