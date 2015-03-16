@@ -1,9 +1,12 @@
-//
-// This file is part of the GNU ARM Eclipse distribution.
-// Copyright (c) 2014 Liviu Ionescu.
-//
-
-// ----------------------------------------------------------------------------
+/*
+ * main.c
+ *
+ * STM7783 Display with touch demo 
+ * 
+ * Grafic LCD (Chip=ST7783)
+ *
+ * Created: Mar 15, 2015
+ */
 
 #include <stdio.h>
 //#include "diag/Trace.h"
@@ -13,9 +16,6 @@
 
 
 // ----------------------------------------------------------------------------
-//
-// Standalone STM32F4 empty sample (trace via NONE).
-//
 // Trace support is enabled by adding the TRACE macro definition.
 // By default the trace messages are forwarded to the NONE output,
 // but can be rerouted to any device or completely suppressed, by
@@ -43,6 +43,14 @@ void SysTick_Handler(void)
   HAL_IncTick();
 }
 
+/**
+ * \brief main function
+ * 
+ * \param argc
+ * \param argv
+ * 
+ * \return int
+ */
 int main(int argc, char* argv[])
 {
 	LCD_Begin();
@@ -52,7 +60,7 @@ int main(int argc, char* argv[])
 	LCD_DrawCircle(120, 160, 100, WHITE);
 	LCD_DrawRect(20, 40, 200, 240, WHITE);
 
-	Touch_Init();
+	Touch_Begin();
 
 	LCD_SetTextColor(WHITE, BLACK);
 	LCD_SetTextSize(3);

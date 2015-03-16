@@ -1,3 +1,9 @@
+/*
+ * Touch.h
+ *
+ * Created: Mar 15, 2015
+ */
+
 #ifndef TOUCHSCREEN_HW_H
 #define TOUCHSCREEN_HW_H
 
@@ -8,7 +14,7 @@ extern "C" {
 #endif
 
 
-void Touch_Init(void);
+void Touch_Begin(void);
 
 void Touch_Getraw(uint16_t *adc_x, uint16_t *adc_y);
 

@@ -1,5 +1,7 @@
 /*
  * STM7783.c
+ *
+ * Created: Mar 15, 2015
  * 
  * Grafic LCD Function (Chip=ST7783)
  *
@@ -15,7 +17,6 @@
  *
  */
 
-
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -26,8 +27,18 @@
 #define TFTWIDTH   240
 #define TFTHEIGHT  320
 
-// // Initialization command table for LCD controller
 #define TFTLCD_DELAY 0xFF
+
+// GPIO to data bus pin connections
+// ---- PORT Pin ---     --- Data ----
+// GPIOA, GPIO_PIN_9  -> BIT 0
+// GPIOC, GPIO_PIN_7  -> BIT 1
+// GPIOA, GPIO_PIN_10 -> BIT 2
+// GPIOB, GPIO_PIN_3  -> BIT 3
+// GPIOB, GPIO_PIN_5  -> BIT 4
+// GPIOB, GPIO_PIN_4  -> BIT 5
+// GPIOB, GPIO_PIN_10 -> BIT 6
+// GPIOA, GPIO_PIN_8  -> BIT 7
 
 #define LCD_CS_PIN  GPIO_PIN_0	// PB0 -> A3 // Chip Select goes to Analog 3
 #define LCD_CD_PIN  GPIO_PIN_4	// PA4 -> A2 // Command/Data goes to Analog 2
@@ -44,8 +55,8 @@
 #define LCD_RD_LOW()      LCD_RD_GPIO_PORT->BSRRH = LCD_RD_PIN
 
 #define LCD_WR_GPIO_PORT  GPIOA
-#define LCD_WR_HIGH()    LCD_WR_GPIO_PORT->BSRRL = LCD_WR_PIN
-#define LCD_WR_LOW()     LCD_WR_GPIO_PORT->BSRRH = LCD_WR_PIN
+#define LCD_WR_HIGH()	  LCD_WR_GPIO_PORT->BSRRL = LCD_WR_PIN
+#define LCD_WR_LOW()      LCD_WR_GPIO_PORT->BSRRH = LCD_WR_PIN
 
 #define LCD_CD_GPIO_PORT  GPIOA
 #define LCD_CD_HIGH()     LCD_CD_GPIO_PORT->BSRRL = LCD_CD_PIN
@@ -70,6 +81,7 @@ static uint8_t m_textsize;
 static uint8_t m_rotation;
 static uint8_t m_wrap;
 
+// Initialization commands
 static const uint16_t ST7781_regValues[] = {
 	0x0001,0x0100,
 	0x0002,0x0700,
@@ -162,13 +174,6 @@ static const uint16_t ST7781_regValues[] = {
 
 void delay(unsigned int t)
 {
-//  unsigned char t1;
-//  while(t--)
-//  for ( t1=10; t1 > 0; t1-- )
-//  {
-//    __asm("nop");
-//  }
-
 	for (; t > 0; t-- )
 	{
 	__asm("nop");
@@ -176,9 +181,15 @@ void delay(unsigned int t)
 }
 
 
+/**
+ * \brief GPIO Initialization
+ * 
+ * \param 
+ * 
+ * \return void
+ */
 static void GPIO_Init(void)
 {
-
 	GPIO_InitTypeDef GPIO_InitStruct;
 
 	/* GPIO Ports Clock Enable */
@@ -210,6 +221,13 @@ static void GPIO_Init(void)
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
+/**
+ * \brief LCD Initialization
+ * 
+ * \param 
+ * 
+ * \return void
+ */
 void LCD_Begin(void)
 {
 	m_width     = TFTWIDTH;
@@ -243,21 +261,31 @@ void LCD_Begin(void)
 	LCD_SetAddrWindow(0, 0, TFTWIDTH-1, TFTHEIGHT-1);
 }
 
-// Sets the LCD address window (and address counter, on 932X).
-// Relevant to rect/screen fills and H/V lines.  Input coordinates are
-// assumed pre-sorted (e.g. x2 >= x1).
-// Fast block fill operation for fillScreen, fillRect, H/V line, etc.
-// Requires setAddrWindow() has previously been called to set the fill
-// bounds.  'len' is inclusive, MUST be >= 1.
-// Fill a rounded rectangle
-// Used to do circles and roundrects
+/**
+ * \brief Calucalte 16Bit-RGB
+ * 
+ * \param r	Red
+ * \param g	Green
+ * \param b	Blue
+ * 
+ * \return uint16_t	16Bit-RGB
+ */
 uint16_t LCD_Color565(uint8_t r, uint8_t g, uint8_t b)
 {
   return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 
-void LCD_DrawPixel(int16_t x, int16_t y, uint16_t color) {
-
+/**
+ * \brief Draws a point at the specified coordinates
+ * 
+ * \param x		x-Coordinate
+ * \param y		y-Coordinate
+ * \param color	Color
+ * 
+ * \return void
+ */
+void LCD_DrawPixel(int16_t x, int16_t y, uint16_t color)
+{
 	// Clip
 	if((x < 0) || (y < 0) || (x >= TFTWIDTH) || (y >= TFTHEIGHT)) return;
 
@@ -288,47 +316,70 @@ void LCD_DrawPixel(int16_t x, int16_t y, uint16_t color) {
 	LCD_CS_HIGH();
 }
 
-// Bresenham's algorithm - thx wikpedia
-void LCD_DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
+
+/**
+ * \brief Draws a line connecting the two points specified by the coordinate pairs
+ * 
+ * \param x0	The x-coordinate of the first point
+ * \param y0	The y-coordinate of the first point
+ * \param x1	The x-coordinate of the second point
+ * \param y1	The y-coordinate of the second point.
+ * \param color	Color
+ * 
+ * \return void
+ */
+void LCD_DrawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color)
 {
-	int16_t steep = abs(y1 - y0) > abs(x1 - x0);
+	// Bresenham's algorithm - thx wikpedia
+	
+	int16_t steep = abs(y2 - y1) > abs(x2 - x1);
 	if (steep) {
-		swap(x0, y0);
 		swap(x1, y1);
+		swap(x2, y2);
 	}
 
-	if (x0 > x1) {
-		swap(x0, x1);
-		swap(y0, y1);
+	if (x1 > x2) {
+		swap(x1, x2);
+		swap(y1, y2);
 	}
 
 	int16_t dx, dy;
-	dx = x1 - x0;
-	dy = abs(y1 - y0);
+	dx = x2 - x1;
+	dy = abs(y2 - y1);
 
 	int16_t err = dx / 2;
 	int16_t ystep;
 
-	if (y0 < y1) {
+	if (y1 < y2) {
 		ystep = 1;
 	} else {
 		ystep = -1;
 	}
 
-	for (; x0<=x1; x0++) {
+	for (; x1<=x2; x1++) {
 		if (steep) {
-			LCD_DrawPixel(y0, x0, color);
+			LCD_DrawPixel(y1, x1, color);
 		} else {
-			LCD_DrawPixel(x0, y0, color);
+			LCD_DrawPixel(x1, y1, color);
 		}
 		err -= dy;
 		if (err < 0) {
-			y0 += ystep;
+			y1 += ystep;
 		err += dx;
 		}
 	}
 }
 
+/**
+ * \brief Draws a horizontal line
+ *
+ * \param x			The x-coordinate of the first point
+ * \param y			The y-coordinate of the first point
+ * \param length	Length of the line
+ * \param color	Color
+ * 
+ * \return void
+ */
 void LCD_DrawFastHLine(int16_t x, int16_t y, int16_t length, uint16_t color)
 {
 	int16_t x2;
@@ -354,12 +405,33 @@ void LCD_DrawFastHLine(int16_t x, int16_t y, int16_t length, uint16_t color)
 
 }
 
+/**
+ * \brief Draws a vertical line
+ *
+ * \param x		The x-coordinate of the first point
+ * \param y		The y-coordinate of the first point
+ * \param h		High of the line
+ * \param color	Color
+ * 
+ * \return void
+ */
 void LCD_DrawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
 {
 	// Update in subclasses if desired!
 	LCD_DrawLine(x, y, x, y+h-1, color);
 }
 
+/**
+ * \brief Draws a rectangle specified by a coordinate pair, a width, and a height.
+ * 
+ * \param x			The x-coordinate of the upper-left corner of the rectangle to draw
+ * \param y			The y-coordinate of the upper-left corner of the rectangle to draw
+ * \param w			Width of the rectangle to draw
+ * \param h			Height of the rectangle to draw
+ * \param color		Color
+ * 
+ * \return void
+ */
 void LCD_DrawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
 {
 	LCD_DrawFastHLine(x, y, w, color);
@@ -368,7 +440,19 @@ void LCD_DrawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
 	LCD_DrawFastVLine(x+w-1, y, h, color);
 }
 
-// Draw a rounded rectangle
+
+/**
+ * \brief Draws a rectangle with rounded corners specified by a coordinate pair, a width, and a height.
+ * 
+ * \param x			The x-coordinate of the upper-left corner of the rectangle to draw
+ * \param y			The y-coordinate of the upper-left corner of the rectangle to draw
+ * \param w			Width of the rectangle to draw
+ * \param h			Height of the rectangle to draw
+ * \param r			Radius
+ * \param color		Color
+ * 
+ * \return void
+ */
 void LCD_DrawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color)
 {
 	// smarter version
@@ -383,6 +467,17 @@ void LCD_DrawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, ui
 	LCD_DrawCircleHelper(x+r    , y+h-r-1, r, 8, color);
 }
 
+/**
+ * \brief Helper function drawing rounded corners
+ * 
+ * \param x0			The x-coordinate
+ * \param y0			The y-coordinate
+ * \param r				Radius
+ * \param cornername	Corner (1, 2, 3, 4)
+ * \param color			Color
+ * 
+ * \return void
+ */
 void LCD_DrawCircleHelper( int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color)
 {
 	int16_t f     = 1 - r;
@@ -419,6 +514,16 @@ void LCD_DrawCircleHelper( int16_t x0, int16_t y0, int16_t r, uint8_t cornername
 	}
 }
 
+/**
+ * \brief Draws an circle defined by a pair of coordinates and radius
+ * 
+ * \param x0		The x-coordinate
+ * \param y0		The y-coordinate
+ * \param r			Radius
+ * \param color		Color
+ * 
+ * \return void
+ */
 void LCD_DrawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
 {
 	int16_t f = 1 - r;
@@ -453,6 +558,18 @@ void LCD_DrawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
 	}
 }
 
+/**
+ * \brief Draws a character at the specified coordinates
+ * 
+ * \param x			The x-coordinate
+ * \param y			The y-coordinate
+ * \param c			Character
+ * \param color		Character color
+ * \param bg		Background color
+ * \param size		Character Size
+ * 
+ * \return void
+ */
 void LCD_DrawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size)
 {
 	if((x >= m_width)            || // Clip right
@@ -500,12 +617,34 @@ void LCD_DrawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int1
 	}
 }
 
+/**
+ * \brief Draws a filled circle defined by a pair of coordinates and radius
+ * 
+ * \param x0		The x-coordinate
+ * \param y0		The y-coordinate
+ * \param r			Radius
+ * \param color		Color
+ * 
+ * \return void
+ */
 void LCD_FillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
 {
   LCD_DrawFastVLine(x0, y0-r, 2*r+1, color);
   LCD_FillCircleHelper(x0, y0, r, 3, 0, color);
 }
 
+/**
+ * \brief Helper function to draw a filled circle
+ * 
+ * \param x0			The x-coordinate
+ * \param y0			The y-coordinate
+ * \param r				Radius
+ * \param cornername	Corner (1, 2, 3, 4)
+ * \param delta			Delta
+ * \param color			Color
+ * 
+ * \return void
+ */
 void LCD_FillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color)
 {
 	int16_t f     = 1 - r;
@@ -535,18 +674,29 @@ void LCD_FillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername,
 	}
 }
 
-void LCD_FillRect(int16_t x1, int16_t y1, int16_t w, int16_t h, uint16_t fillcolor)
+/**
+ * \brief Draws a filled rectangle specified by a coordinate pair, a width, and a height.
+ * 
+ * \param x				The x-coordinate of the upper-left corner of the rectangle to draw
+ * \param y				The y-coordinate of the upper-left corner of the rectangle to draw
+ * \param w				Width of the rectangle to draw
+ * \param h				Height of the rectangle to draw
+ * \param fillcolor		Color
+ * 
+ * \return void
+ */
+void LCD_FillRect(int16_t x, int16_t y1, int16_t w, int16_t h, uint16_t fillcolor)
 {
 	int16_t  x2, y2;
 
 	// Initial off-screen clipping
 	if( (w <= 0) || (h <= 0) ||
-		(x1 >= m_width) || (y1 >= m_height) ||
-		((x2 = x1+w-1) <  0) || ((y2  = y1+h-1) <  0))
+		(x >= m_width) || (y1 >= m_height) ||
+		((x2 = x+w-1) <  0) || ((y2  = y1+h-1) <  0))
 			return;
-	if(x1 < 0) { // Clip left
-		w += x1;
-		x1 = 0;
+	if(x < 0) { // Clip left
+		w += x;
+		x = 0;
 	}
 	if(y1 < 0) { // Clip top
 		h += y1;
@@ -554,18 +704,30 @@ void LCD_FillRect(int16_t x1, int16_t y1, int16_t w, int16_t h, uint16_t fillcol
 	}
 	if(x2 >= m_width) { // Clip right
 		x2 = m_width - 1;
-		w  = x2 - x1 + 1;
+		w  = x2 - x + 1;
 	}
 	if(y2 >= m_height) { // Clip bottom
 		y2 = m_height - 1;
 		h  = y2 - y1 + 1;
 	}
 
-	LCD_SetAddrWindow(x1, y1, x2, y2);
+	LCD_SetAddrWindow(x, y1, x2, y2);
 	LCD_Flood(fillcolor, (uint32_t)w * (uint32_t)h);
 	LCD_SetAddrWindow(0, 0, m_width - 1, m_height - 1);
 }
 
+/**
+ * \brief Draws a filled rounded rectangle specified by a coordinate pair, a width, and a height.
+ * 
+ * \param x				The x-coordinate of the upper-left corner of the rectangle to draw
+ * \param y				The y-coordinate of the upper-left corner of the rectangle to draw
+ * \param w				Width of the rectangle to draw
+ * \param h				Height of the rectangle to draw
+ * \param r				Radius
+ * \param fillcolor		Color
+ * 
+ * \return void
+ */
 void LCD_FillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color)
 {
 	// smarter version
@@ -576,6 +738,13 @@ void LCD_FillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, ui
 	LCD_FillCircleHelper(x+r    , y+r, r, 2, h-2*r-1, color);
 }
 
+/**
+ * \brief Fills the screen with the specified color
+ * 
+ * \param color	Color
+ * 
+ * \return void
+ */
 void LCD_FillScreen(uint16_t color)
 {
 	// For the 932X, a full-screen address window is already the default
@@ -597,6 +766,14 @@ void LCD_FillScreen(uint16_t color)
 	LCD_Flood(color, (long)TFTWIDTH * (long)TFTHEIGHT);
 }
 
+/**
+ * \brief Flood
+ * 
+ * \param color	Color
+ * \param len	Length
+ * 
+ * \return void
+ */
 void LCD_Flood(uint16_t color, uint32_t len)
 {
 	uint16_t blocks;
@@ -645,6 +822,14 @@ void LCD_Flood(uint16_t color, uint32_t len)
 	LCD_CS_HIGH();
 }
 
+/**
+ * \brief Print the specified Text
+ * 
+ * \param fmt	Format text
+ * \param 
+ * 
+ * \return void
+ */
 void LCD_Printf(const char *fmt, ...)
 {
 	static char buf[256];
@@ -673,6 +858,14 @@ void LCD_Printf(const char *fmt, ...)
 		p++;
 	}
 }
+
+/**
+ * \brief Resets the Display
+ * 
+ * \param 
+ * 
+ * \return void
+ */
 void LCD_Reset(void)
 {
 	LCD_CS_HIGH();
@@ -692,28 +885,65 @@ void LCD_Reset(void)
 	LCD_CS_HIGH();
 }
 
+/**
+ * \brief Sets the cursor coordinates
+ * 
+ * \param x		The x-coordinate
+ * \param y		The y-coordinate
+ * 
+ * \return void
+ */
 void LCD_SetCursor(unsigned int x, unsigned int y)
 {
 	m_cursor_x = x;
 	m_cursor_y = y;
 }
 
+/**
+ * \brief Sets the text size
+ * 
+ * \param s	Size
+ * 
+ * \return void
+ */
 void LCD_SetTextSize(uint8_t s)
 {
 	m_textsize = (s > 0) ? s : 1;
 }
 
+/**
+ * \brief Sets the text color
+ * 
+ * \param c		Text color
+ * \param b		Background color
+ * 
+ * \return void
+ */
 void LCD_SetTextColor(uint16_t c, uint16_t b)
 {
 	m_textcolor   = c;
 	m_textbgcolor = b;
 }
 
+/**
+ * \brief Set Text wrap
+ * 
+ * \param w 
+ * 
+ * \return void
+ */
 void LCD_SetTextWrap(uint8_t w)
 {
 	m_wrap = w;
 }
 
+/**
+ * \brief Set display rotation
+ * 
+ * \param x	rotation
+ * 
+ * \return void
+ */
 void LCD_SetRotation(uint8_t x)
 {
 	m_rotation = (x & 3);
@@ -731,6 +961,16 @@ void LCD_SetRotation(uint8_t x)
 	}
 }
 
+/**
+ * \brief Sets window address
+ * 
+ * \param x1
+ * \param y1
+ * \param x2
+ * \param y2
+ * 
+ * \return void
+ */
 void LCD_SetAddrWindow(int x1, int y1, int x2, int y2)
 {
 
@@ -786,10 +1026,16 @@ void LCD_SetAddrWindow(int x1, int y1, int x2, int y2)
 	LCD_WriteRegister16(0x0020, x ); // Set address counter to top left
 	LCD_WriteRegister16(0x0021, y );
 
-
 	LCD_CS_HIGH();
 }
 
+/**
+ * \brief Writes 8-Bit data
+ * 
+ * \param data	8-Bit Data
+ * 
+ * \return void
+ */
 void LCD_Write8(uint8_t data)
 {
 	// ------ PORT -----     --- Data ----
@@ -811,6 +1057,13 @@ void LCD_Write8(uint8_t data)
 	LCD_WR_STROBE();
 }
 
+/**
+ * \brief Writes 8-Bit register
+ * 
+ * \param data	8-Bit Data
+ * 
+ * \return void
+ */
 void LCD_WriteRegister8(uint8_t a, uint8_t d)
 {
 	LCD_CD_LOW();
@@ -819,6 +1072,14 @@ void LCD_WriteRegister8(uint8_t a, uint8_t d)
 	LCD_Write8(d);
 }
 
+/**
+ * \brief Writes 16-Bit register
+ * 
+ * \param a		Register
+ * \param d		Data
+ * 
+ * \return void
+ */
 void LCD_WriteRegister16(uint16_t a, uint16_t d)
 {
 	uint8_t hi, lo;

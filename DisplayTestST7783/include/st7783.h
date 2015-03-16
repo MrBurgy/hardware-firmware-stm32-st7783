@@ -1,3 +1,8 @@
+/*
+ * ST7783.h
+ *
+ * Created: Mar 15, 2015
+ */
 
 #ifndef __ST7783_H
 #define __ST7783_H
@@ -16,10 +21,8 @@
 
 
 void LCD_Begin(void);
-uint16_t LCD_Color565(uint8_t r, uint8_t g, uint8_t b);
-
 void LCD_DrawPixel(int16_t x, int16_t y, uint16_t color);
-void LCD_DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
+void LCD_DrawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
 void LCD_DrawFastHLine(int16_t x, int16_t y, int16_t length, uint16_t color);
 void LCD_DrawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
 void LCD_DrawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
@@ -30,7 +33,7 @@ void LCD_DrawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int1
 void LCD_DrawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size);
 void LCD_FillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
 void LCD_FillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color);
-void LCD_FillRect(int16_t x1, int16_t y1, int16_t w, int16_t h, uint16_t fillcolor);
+void LCD_FillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t fillcolor);
 void LCD_FillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
 void LCD_FillScreen(uint16_t color);
 void LCD_Flood(uint16_t color, uint32_t len);
@@ -46,4 +49,7 @@ void LCD_Printf(const char *fmt, ...);
 void LCD_Write8(uint8_t data);
 void LCD_WriteRegister8(uint8_t a, uint8_t d);
 void LCD_WriteRegister16(uint16_t a, uint16_t d);
+
+uint16_t LCD_Color565(uint8_t r, uint8_t g, uint8_t b);
+
 #endif /* __ST7783_H */
